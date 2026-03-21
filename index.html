@@ -1,0 +1,3160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d1117">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>빵포 스케줄러</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+  --text:#e6edf3;--muted:#7d8590;
+  --mil:#4fc3f7;--mor:#ffd54f;--aft:#81c784;--swi:#ce93d8;--mid:#ef9a9a;
+  --green:#39d353;--red:#f85149;--today:#4fc3f7;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;}
+
+/* ── HEADER ── */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.app-title{font-family:'Black Han Sans',sans-serif;font-size:21px;color:var(--mil);letter-spacing:2px;text-shadow:0 0 20px rgba(79,195,247,.3);}
+.app-sub{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:1px;}
+.hdr-btns{display:flex;gap:7px;align-items:center;}
+.hdr-btn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--text);cursor:pointer;white-space:nowrap;}
+.hdr-btn:hover{border-color:var(--mil);color:var(--mil);}
+.hdr-btn.red{border-color:rgba(248,81,73,.3);color:var(--red);}
+.hdr-btn.red:hover{background:rgba(248,81,73,.1);}
+
+/* ── VIEW TABS ── */
+.view-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);}
+.view-tab{flex:1;padding:11px 8px;background:none;border:none;color:var(--muted);font-family:'Black Han Sans',sans-serif;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+.view-tab.active{color:var(--mil);border-bottom-color:var(--mil);}
+
+/* ── PAGES ── */
+.page{display:none;}.page.active{display:block;}
+
+/* ── SETUP ── */
+.setup-wrap{max-width:480px;margin:0 auto;padding:20px 15px 70px;}
+.s-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;}
+.s-title{font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--mil);letter-spacing:1px;margin-bottom:13px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px;}
+.form-group{margin-bottom:11px;}
+label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:500;}
+input,select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 13px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:14px;-webkit-appearance:none;appearance:none;}
+input:focus,select:focus{outline:none;border-color:var(--mil);box-shadow:0 0 0 3px rgba(79,195,247,.1);}
+select option{background:var(--surface2);}
+.btn{display:block;width:100%;padding:13px;border:none;border-radius:11px;font-family:'Black Han Sans',sans-serif;font-size:15px;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.btn-primary{background:var(--mil);color:#000;}
+.btn-primary:hover{filter:brightness(1.1);}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;}
+.btn-danger{background:rgba(248,81,73,.08);color:var(--red);border:1px solid rgba(248,81,73,.25);margin-top:9px;}
+.btn-danger:hover{background:rgba(248,81,73,.15);}
+.pattern-flow{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 13px;}
+.p-chip{border-radius:6px;padding:4px 9px;font-size:11px;font-weight:700;border:1px solid;}
+.preview-scroll{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.preview-scroll::-webkit-scrollbar{display:none;}
+.p-item{text-align:center;border-radius:8px;padding:7px 5px;min-width:46px;flex-shrink:0;border:1px solid rgba(255,255,255,.05);}
+
+/* ── CALENDAR ── */
+.cal-wrap{max-width:520px;margin:0 auto;padding:13px 13px 80px;}
+.user-banner{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
+.user-banner-rank{font-size:10px;color:var(--muted);letter-spacing:.5px;margin-bottom:2px;}
+.user-banner-name{font-family:'Black Han Sans',sans-serif;font-size:16px;color:var(--mil);letter-spacing:1px;}
+.user-banner-partner{font-size:11px;color:var(--muted);margin-top:2px;}
+.user-banner-partner strong{color:var(--text);}
+.user-banner-right{text-align:right;}
+.user-banner-date{font-size:11px;color:var(--muted);}
+.user-banner-today{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--text);margin-top:2px;}
+
+.stats-bar{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px 14px;margin-bottom:11px;display:flex;justify-content:space-around;}
+.stat-item{text-align:center;}
+.stat-val{font-family:'Black Han Sans',sans-serif;font-size:19px;}
+.stat-lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+
+/* CUM CARD */
+.cum-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:15px;margin-bottom:12px;}
+.cum-title{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--mil);letter-spacing:1px;margin-bottom:11px;}
+.cum-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px;}
+.cum-box{border-radius:11px;padding:13px;text-align:center;}
+.cum-box.work{background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.2);}
+.cum-box.off{background:rgba(125,133,144,.08);border:1px solid rgba(125,133,144,.2);}
+.cum-icon{font-size:18px;margin-bottom:4px;}
+.cum-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.cum-val{font-family:'Black Han Sans',sans-serif;font-size:14px;color:var(--text);line-height:1.3;}
+.cum-sub{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.6;}
+.cum-bar-label{display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-bottom:4px;}
+.cum-progress{height:7px;background:var(--border);border-radius:7px;overflow:hidden;margin-bottom:9px;}
+.cum-progress-fill{height:100%;background:linear-gradient(90deg,var(--mil),var(--aft));border-radius:7px;transition:width .6s ease;width:0%;}
+.cum-toggle{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:20px;font-size:11px;cursor:pointer;}
+.cum-toggle:hover{border-color:var(--mil);color:var(--mil);}
+.cum-compare{background:var(--surface2);border:1px solid rgba(255,213,79,.15);border-radius:10px;padding:12px 14px;margin-top:10px;}
+.cum-compare-title{font-size:10px;color:var(--mor);letter-spacing:1px;font-weight:700;text-transform:uppercase;margin-bottom:8px;}
+.cum-compare-body{font-size:12px;color:var(--muted);line-height:1.9;}
+.cum-compare-body strong{color:var(--text);}
+.more{color:var(--green);}.less{color:var(--red);}
+
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;}
+.cal-month{font-family:'Black Han Sans',sans-serif;font-size:19px;letter-spacing:2px;}
+.cal-nav{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 13px;color:var(--text);font-size:17px;cursor:pointer;}
+.cal-nav:hover{border-color:var(--mil);}
+.legend{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);}
+.legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+
+/* CALENDAR GRID */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-dow{text-align:center;font-size:10px;font-weight:700;padding:7px 0;color:var(--muted);}
+.cal-dow:first-child{color:#ff6b6b;}
+.cal-dow:last-child{color:#4fc3f7;}
+.cal-day{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:5px 4px;min-height:110px;cursor:pointer;transition:border-color .15s;position:relative;overflow:visible;}
+.cal-day:hover{border-color:var(--mil);}
+.cal-day.other-month{opacity:.2;pointer-events:none;}
+.cal-day.today{border-color:var(--today);box-shadow:0 0 0 1px var(--today);}
+.cal-day.holiday .day-num,.cal-day.sunday .day-num{color:#ff6b6b!important;}
+.cal-day.saturday .day-num{color:#4fc3f7!important;}
+.day-num{font-size:12px;font-weight:700;display:block;margin-bottom:2px;}
+.day-holiday{font-size:7px;color:#ff6b6b;line-height:1.1;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.shift-badge{border-radius:4px;padding:2px 3px;font-size:8px;font-weight:700;display:block;margin-bottom:1px;text-align:center;line-height:1.2;}
+.shift-time{font-size:7px;display:block;text-align:center;opacity:.8;line-height:1.2;margin-bottom:1px;}
+.shift-MOR{background:rgba(255,213,79,.2);color:var(--mor);border:1px solid rgba(255,213,79,.3);}
+.shift-AFT{background:rgba(129,199,132,.2);color:var(--aft);border:1px solid rgba(129,199,132,.3);}
+.shift-SWI{background:rgba(206,147,216,.2);color:var(--swi);border:1px solid rgba(206,147,216,.3);}
+.shift-MID{background:rgba(239,154,154,.2);color:var(--mid);border:1px solid rgba(239,154,154,.3);}
+.shift-OFF{background:rgba(125,133,144,.1);color:var(--muted);border:1px solid rgba(125,133,144,.2);}
+.memo-dot{width:5px;height:5px;border-radius:50%;background:var(--green);position:absolute;top:4px;right:4px;}
+.flag-icon{font-size:8px;position:absolute;bottom:3px;right:3px;}
+.partner-dot{width:5px;height:5px;border-radius:50%;background:var(--swi);position:absolute;top:4px;left:4px;}
+.day-flag-memo{display:flex;align-items:flex-start;gap:2px;margin-top:2px;}
+.day-memo{font-size:7px;color:var(--green);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;word-break:break-all;opacity:.85;}
+.est-badge{font-size:7px;background:rgba(206,147,216,.25);color:var(--swi);border:1px solid rgba(206,147,216,.3);border-radius:3px;padding:1px 3px;display:block;text-align:center;margin-top:1px;}
+
+/* MONTH TAB */
+.month-tab{flex-shrink:0;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.month-tab.active{border-color:var(--mil);color:var(--mil);background:rgba(79,195,247,.1);}
+.month-tab.registered{border-color:var(--green);color:var(--green);background:rgba(57,209,83,.08);}
+.month-tab.registered.active{border-color:var(--green);color:var(--green);background:rgba(57,209,83,.15);}
+
+/* WEEKLY VIEW */
+.week-wrap{max-width:520px;margin:0 auto;padding:13px 13px 80px;}
+.week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.week-title{font-family:'Black Han Sans',sans-serif;font-size:16px;letter-spacing:1px;}
+.week-nav-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 13px;color:var(--text);font-size:17px;cursor:pointer;}
+.week-nav-btn:hover{border-color:var(--mil);}
+.today-btn{font-family:'Black Han Sans',sans-serif;font-size:11px;background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.3);color:var(--mil);border-radius:20px;padding:5px 12px;cursor:pointer;}
+.week-summary{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
+.week-sum-title{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--mil);letter-spacing:1px;margin-bottom:11px;}
+.week-sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.week-sum-box{background:var(--surface2);border-radius:10px;padding:11px;text-align:center;}
+.week-sum-val{font-family:'Black Han Sans',sans-serif;font-size:18px;}
+.week-sum-lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+
+.week-day-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:border-color .15s;}
+.week-day-card:hover{border-color:var(--mil);}
+.week-day-card.today-card{border-color:var(--today);box-shadow:0 0 0 1px var(--today);}
+.week-day-card.has-memo{border-left:3px solid var(--green);}
+.week-day-card.has-partner{border-left:3px solid var(--swi);}
+.wdc-header{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;}
+.wdc-date{font-family:'Black Han Sans',sans-serif;font-size:15px;letter-spacing:1px;}
+.wdc-dow{font-size:11px;color:var(--muted);margin-top:1px;}
+.wdc-holiday{font-size:10px;color:#ff6b6b;font-weight:500;}
+.wdc-today-badge{font-size:9px;background:var(--today);color:#000;border-radius:4px;padding:2px 6px;font-weight:700;}
+.wdc-shift-name{font-family:'Black Han Sans',sans-serif;font-size:18px;letter-spacing:1px;}
+.wdc-shift-time{font-size:11px;margin-top:2px;text-align:right;}
+.wdc-divider{height:1px;background:var(--border);margin:0 14px 10px;}
+.wdc-body{padding:0 14px 10px;font-size:13px;color:var(--muted);line-height:1.6;}
+.wdc-flag{margin-right:4px;}
+.wdc-hrs{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--surface2);font-size:11px;color:var(--muted);}
+.wdc-hrs span{font-weight:700;color:var(--text);}
+
+/* TIMELINE */
+.timeline-wrap{position:relative;background:var(--surface2);border-radius:8px;height:36px;margin:8px 14px 10px;overflow:hidden;}
+.timeline-bg-lines{position:absolute;inset:0;display:flex;}
+.timeline-hour{flex:1;border-right:1px solid rgba(255,255,255,.04);}
+.timeline-bar{position:absolute;top:4px;bottom:4px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;overflow:hidden;}
+.timeline-label{position:absolute;bottom:-1px;left:0;right:0;display:flex;justify-content:space-between;padding:0 2px;font-size:8px;color:rgba(255,255,255,.3);pointer-events:none;}
+.timeline-now-line{position:absolute;top:0;bottom:0;width:2px;background:var(--red);border-radius:1px;z-index:5;}
+.timeline-now-line::after{content:'';position:absolute;top:-1px;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--red);}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--mil);border-radius:20px 20px 0 0;padding:20px 17px 28px;width:100%;max-width:520px;position:relative;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Black Han Sans',sans-serif;font-size:17px;color:var(--mil);letter-spacing:1px;margin-bottom:13px;padding-right:30px;}
+.modal-close{position:absolute;top:15px;right:15px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:27px;height:27px;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-shift-hdr{border-radius:9px;padding:11px 13px;margin-bottom:13px;font-size:13px;font-weight:600;}
+.modal-shift-hdr.MOR{background:rgba(255,213,79,.1);border:1px solid rgba(255,213,79,.3);color:var(--mor);}
+.modal-shift-hdr.AFT{background:rgba(129,199,132,.1);border:1px solid rgba(129,199,132,.3);color:var(--aft);}
+.modal-shift-hdr.SWI{background:rgba(206,147,216,.1);border:1px solid rgba(206,147,216,.3);color:var(--swi);}
+.modal-shift-hdr.MID{background:rgba(239,154,154,.1);border:1px solid rgba(239,154,154,.3);color:var(--mid);}
+.modal-shift-hdr.OFF{background:var(--surface2);border:1px solid var(--border);color:var(--muted);}
+.modal-time{font-size:11px;opacity:.7;margin-top:3px;}
+.sec-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;display:block;}
+.shift-btns{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:13px;}
+.shift-btn{padding:8px 3px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;text-align:center;line-height:1.3;transition:all .15s;}
+.shift-btn.MOR.sel{border-color:var(--mor);color:var(--mor);background:rgba(255,213,79,.15);}
+.shift-btn.AFT.sel{border-color:var(--aft);color:var(--aft);background:rgba(129,199,132,.15);}
+.shift-btn.SWI.sel{border-color:var(--swi);color:var(--swi);background:rgba(206,147,216,.15);}
+.shift-btn.MID.sel{border-color:var(--mid);color:var(--mid);background:rgba(239,154,154,.15);}
+.shift-btn.OFF.sel{border-color:var(--muted);color:var(--text);background:rgba(125,133,144,.15);}
+/* 근무 모드 탭 */
+.shift-mode-tabs{display:flex;gap:6px;margin-bottom:9px;}
+.shift-mode-tab{flex:1;padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;text-align:center;}
+.shift-mode-tab.active{border-color:var(--mil);color:var(--mil);background:rgba(79,195,247,.1);}
+.shift-selected-preview{min-height:28px;background:var(--surface2);border-radius:8px;padding:5px 9px;margin-bottom:9px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.shift-preview-badge{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;}
+.shift-reset-btn{font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline;margin-left:auto;}
+.flag-btns{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:13px;}
+.flag-btn{padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:11px;cursor:pointer;}
+.flag-btn.sel{border-color:var(--green);color:var(--green);background:rgba(57,209,83,.1);}
+.memo-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 12px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;resize:none;height:74px;margin-bottom:13px;}
+.memo-input:focus{outline:none;border-color:var(--mil);}
+
+/* 날짜별 조원 변경 */
+.partner-day-wrap{background:var(--surface2);border:1px solid rgba(206,147,216,.25);border-radius:10px;padding:12px 13px;margin-bottom:13px;}
+.partner-day-title{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--swi);margin-bottom:8px;font-weight:600;}
+.partner-day-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.partner-day-row select,.partner-day-row input{padding:8px 11px;font-size:13px;}
+.partner-day-reset{font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;}
+.partner-day-reset:hover{color:var(--red);}
+
+/* 수면 추천 */
+.sleep-card{background:linear-gradient(135deg,rgba(79,195,247,.06),rgba(129,199,132,.04));border:1px solid rgba(79,195,247,.2);border-radius:12px;padding:14px;margin-top:14px;}
+.sleep-title{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--mil);letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.sleep-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:9px;}
+.sleep-row:last-child{margin-bottom:0;}
+.sleep-icon{font-size:16px;flex-shrink:0;width:22px;text-align:center;margin-top:1px;}
+.sleep-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;font-weight:600;}
+.sleep-val{font-size:13px;color:var(--text);font-weight:500;line-height:1.4;}
+.sleep-tip{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5;}
+.sleep-warn{background:rgba(248,81,73,.08);border:1px solid rgba(248,81,73,.2);border-radius:8px;padding:8px 11px;margin-top:8px;font-size:11px;color:var(--red);line-height:1.6;}
+.sleep-quality{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;}
+.sq-good{background:rgba(57,211,83,.15);color:var(--green);border:1px solid rgba(57,211,83,.3);}
+.sq-fair{background:rgba(255,213,79,.15);color:var(--mor);border:1px solid rgba(255,213,79,.3);}
+.sq-hard{background:rgba(248,81,73,.15);color:var(--red);border:1px solid rgba(248,81,73,.3);}
+
+/* 도움말 */
+.help-tab{flex-shrink:0;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.help-tab.active{border-color:var(--mil);color:var(--mil);background:rgba(79,195,247,.1);}
+.help-section{display:none;}
+.help-section.active{display:block;}
+.help-card{display:flex;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
+.help-card-icon{font-size:22px;flex-shrink:0;width:32px;text-align:center;}
+.help-card-body{flex:1;}
+.help-card-title{font-family:'Black Han Sans',sans-serif;font-size:14px;color:var(--mil);letter-spacing:.5px;margin-bottom:5px;}
+.help-card-desc{font-size:12px;color:var(--muted);line-height:1.75;}
+.help-card-desc strong{color:var(--text);}
+.help-shift-table{background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.hst-row{display:grid;grid-template-columns:60px 1fr 1fr 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);align-items:center;font-size:12px;}
+.hst-row:last-child{border-bottom:none;}
+.hst-header{background:var(--surface);font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.hst-day{font-family:'Black Han Sans',sans-serif;font-size:11px;color:var(--text);}
+
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#000;padding:10px 20px;border-radius:11px;font-weight:700;font-size:13px;z-index:999;transition:transform .3s;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeUp .3s ease forwards;}
+
+/* ── 다음 상번 카운터 ── */
+.next-mor-card{background:linear-gradient(135deg,rgba(255,213,79,.12),rgba(255,107,107,.06));border:1px solid rgba(255,213,79,.35);border-radius:14px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;}
+.next-mor-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,213,79,.05) 0%,transparent 60%);pointer-events:none;}
+.next-mor-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.next-mor-label{font-size:10px;color:rgba(255,213,79,.7);letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:6px;}
+.next-mor-val{font-family:'Black Han Sans',sans-serif;font-size:28px;color:var(--mor);letter-spacing:2px;line-height:1;text-shadow:0 0 20px rgba(255,213,79,.4);}
+.next-mor-unit{font-size:13px;color:rgba(255,213,79,.6);margin-left:2px;}
+.next-mor-sub{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5;}
+.next-mor-icon{font-size:36px;opacity:.5;flex-shrink:0;}
+.next-mor-mins-bar{background:rgba(255,255,255,.05);border:1px solid rgba(255,213,79,.15);border-radius:8px;padding:8px 12px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;}
+.next-mor-mins-label{font-size:10px;color:var(--muted);letter-spacing:1px;}
+.next-mor-mins-val{font-family:'Black Han Sans',sans-serif;font-size:16px;color:rgba(255,213,79,.8);letter-spacing:1px;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+.next-mor-pulse{animation:pulse 2s ease-in-out infinite;}
+
+/* ── 메모 전체보기 ── */
+.memo-list-header{margin-bottom:14px;}
+.memo-list-title{font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--mil);letter-spacing:1px;margin-bottom:4px;}
+.memo-list-sub{font-size:12px;color:var(--muted);}
+.memo-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 15px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;}
+.memo-item:hover{border-color:var(--mil);}
+.memo-item-date{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.memo-item-day{font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--text);letter-spacing:.5px;}
+.memo-item-dow{font-size:11px;color:var(--muted);}
+.memo-item-shift{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:auto;}
+.memo-item-body{font-size:13px;color:var(--text);line-height:1.7;word-break:break-all;}
+.memo-item-flag{font-size:14px;margin-right:5px;}
+.memo-item-text{color:var(--muted);}
+.memo-empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.memo-empty-icon{font-size:40px;margin-bottom:12px;}
+.memo-empty-txt{font-size:14px;line-height:1.7;}
+.memo-month-label{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin:16px 0 8px;padding-left:2px;}
+
+/* ── 멘트 카드 ── */
+.motto-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px;}
+.motto-text{font-size:13px;color:var(--muted);line-height:1.8;text-align:center;}
+.motto-text strong{color:var(--text);}
+.motto-text .highlight{color:var(--mor);font-family:'Black Han Sans',sans-serif;font-size:15px;}
+
+/* ── 시간 환산 재미 카드 ── */
+.fun-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px;}
+.fun-card-title{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:10px;}
+.fun-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.fun-item:last-child{border-bottom:none;padding-bottom:0;}
+.fun-item-left{display:flex;align-items:center;gap:8px;}
+.fun-item-icon{font-size:18px;width:26px;text-align:center;flex-shrink:0;}
+.fun-item-label{font-size:12px;color:var(--muted);line-height:1.4;}
+.fun-item-val{font-family:'Black Han Sans',sans-serif;font-size:14px;color:var(--mil);letter-spacing:.5px;text-align:right;flex-shrink:0;}
+/* ── 명언 카드 ── */
+.quote-card{background:linear-gradient(135deg,var(--surface),rgba(79,195,247,.04));border:1px solid rgba(79,195,247,.15);border-left:3px solid var(--mil);border-radius:12px;padding:14px 16px;margin-bottom:0;}
+.quote-text{font-size:13px;color:var(--text);line-height:1.8;font-style:italic;margin-bottom:8px;}
+.quote-author{font-size:11px;color:var(--mil);font-weight:700;text-align:right;letter-spacing:.5px;}
+.quote-divider{height:1px;background:rgba(79,195,247,.12);margin:11px 0;}
+.quote-mil-label{font-size:9px;color:var(--mil);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:6px;opacity:.7;}
+.quote-mil-text{font-size:12px;color:var(--muted);line-height:1.7;}
+.quote-mil-author{font-size:10px;color:var(--mil);font-weight:700;text-align:right;margin-top:5px;opacity:.8;}
+
+/* ── 수면 마지노선 ── */
+.sleep-deadline{background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.2);border-radius:8px;padding:8px 12px;margin-top:6px;display:flex;align-items:center;gap:8px;}
+.sleep-deadline-icon{font-size:14px;flex-shrink:0;}
+.sleep-deadline-body{flex:1;}
+.sleep-deadline-label{font-size:9px;color:var(--red);letter-spacing:1px;text-transform:uppercase;font-weight:700;margin-bottom:2px;}
+.sleep-deadline-val{font-size:13px;color:var(--text);font-weight:600;}
+.sleep-deadline-tip{font-size:10px;color:var(--muted);margin-top:1px;}
+/* ── 날씨 배지 ── */
+.weather-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.2);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--mil);cursor:pointer;margin-top:4px;}
+.weather-badge:hover{background:rgba(79,195,247,.15);}
+.weather-icon{font-size:14px;}
+.weather-temp{font-family:'Black Han Sans',sans-serif;font-size:12px;}
+.weather-desc{font-size:10px;color:var(--muted);}
+
+/* ── 지역 선택 ── */
+.region-selects{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+.region-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:13px;-webkit-appearance:none;appearance:none;}
+.region-select:focus{outline:none;border-color:var(--mil);}
+.region-select:disabled{opacity:.35;}
+.region-confirmed{font-size:11px;color:var(--green);font-weight:700;margin-top:6px;display:none;}
+
+/* ── 캘린더 날씨 이모티콘 ── */
+.cal-weather{font-size:10px;display:block;text-align:center;margin-top:2px;line-height:1;}
+
+/* ── 날씨 상세 모달 ── */
+.weather-modal-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.weather-modal-icon{font-size:36px;}
+.weather-modal-temp{font-family:'Black Han Sans',sans-serif;font-size:32px;color:var(--text);}
+.weather-modal-info{font-size:12px;color:var(--muted);margin-top:3px;}
+.weather-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.weather-detail-box{background:var(--surface2);border-radius:10px;padding:10px 12px;}
+.weather-detail-label{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.weather-detail-val{font-size:14px;font-weight:700;color:var(--text);}
+.weather-hourly{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.weather-hourly::-webkit-scrollbar{display:none;}
+.weather-hour-item{text-align:center;min-width:44px;flex-shrink:0;background:var(--surface2);border-radius:8px;padding:7px 4px;}
+.weather-hour-time{font-size:9px;color:var(--muted);margin-bottom:3px;}
+.weather-hour-icon{font-size:16px;margin-bottom:2px;}
+.weather-hour-temp{font-size:11px;font-weight:700;color:var(--text);}
+.weather-hour-rain{font-size:9px;color:var(--mil);}
+.weather-hourly-title{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;font-weight:700;}
+
+/* ── 날씨 탭 메인 뷰 ── */
+.weather-today-card{background:linear-gradient(135deg,rgba(79,195,247,.1),rgba(57,211,83,.05));border:1px solid rgba(79,195,247,.25);border-radius:14px;padding:18px;margin-bottom:12px;}
+.weather-today-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.weather-today-label{font-size:10px;color:var(--mil);letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:4px;}
+.weather-today-icon{font-size:52px;line-height:1;margin-bottom:4px;}
+.weather-today-desc{font-size:13px;color:var(--muted);font-weight:500;}
+.weather-today-temp{font-family:'Black Han Sans',sans-serif;font-size:42px;color:var(--text);line-height:1;}
+.weather-today-range{font-size:12px;color:var(--muted);margin-top:6px;}
+.weather-today-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.weather-today-box{background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px;}
+.wtb-label{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.wtb-val{font-size:15px;font-weight:700;color:var(--text);}
+.weather-hourly-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;font-weight:700;}
+.weather-hourly-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.weather-hourly-scroll::-webkit-scrollbar{display:none;}
+.whs-item{text-align:center;min-width:48px;flex-shrink:0;background:rgba(255,255,255,.04);border-radius:10px;padding:8px 5px;}
+.whs-time{font-size:9px;color:var(--muted);margin-bottom:4px;}
+.whs-icon{font-size:18px;margin-bottom:3px;}
+.whs-temp{font-size:11px;font-weight:700;color:var(--text);}
+.whs-rain{font-size:9px;color:var(--mil);margin-top:2px;}
+.whs-now{border:1px solid var(--mil);background:rgba(79,195,247,.1);}
+/* 7일 예보 */
+.weather-week-title{font-family:'Black Han Sans',sans-serif;font-size:14px;color:var(--mil);margin-bottom:10px;}
+.weather-week-item{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;}
+.weather-week-item:hover{border-color:var(--mil);}
+.wwi-date{font-size:12px;color:var(--muted);width:50px;flex-shrink:0;}
+.wwi-day{font-family:'Black Han Sans',sans-serif;font-size:13px;color:var(--text);width:22px;flex-shrink:0;}
+.wwi-icon{font-size:22px;margin:0 12px;}
+.wwi-desc{font-size:12px;color:var(--muted);flex:1;}
+.wwi-temp{font-size:12px;color:var(--text);text-align:right;}
+.wwi-max{font-weight:700;color:var(--red);}
+.wwi-min{color:var(--mil);}
+.wwi-rain{font-size:10px;color:var(--mil);text-align:right;}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="app-title">빵포 스케줄러</div>
+    <div class="app-sub">제작자 · 정락원</div>
+  </div>
+  <div class="hdr-btns">
+    <div class="hdr-btn" onclick="openHelp()">❓</div>
+    <div class="hdr-btn" id="user-badge" onclick="goSetup()">⚙️ 설정</div>
+    <div class="hdr-btn red" id="reset-badge" onclick="confirmReset()" style="display:none;">🗑️</div>
+  </div>
+</header>
+
+<div class="view-tabs" id="view-tabs" style="display:none;">
+  <button class="view-tab active" id="tab-month" onclick="switchView('month')">📅 월별</button>
+  <button class="view-tab" id="tab-week" onclick="switchView('week')">📋 주별</button>
+  <button class="view-tab" id="tab-memo" onclick="switchView('memo')">📝 메모</button>
+  <button class="view-tab" id="tab-weather" onclick="switchView('weather')">🌤️ 날씨</button>
+</div>
+
+<!-- ===== SETUP ===== -->
+<div id="page-setup" class="page active">
+  <div class="setup-wrap">
+    <div class="s-card fade-in">
+      <div class="s-title">👤 사용자 정보</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>계급</label>
+          <select id="rank">
+            <option value="">선택</option>
+            <option>하사</option><option>중사</option><option>상사</option><option>원사</option>
+            <option>준위</option><option>소위</option><option>중위</option><option>대위</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>성명</label>
+          <input type="text" id="username" placeholder="홍길동">
+        </div>
+      </div>
+      <div style="margin-top:4px;">
+        <label>함께 근무하는 조원 (선택)</label>
+        <div class="form-row" style="margin-bottom:0;">
+          <div class="form-group" style="margin-bottom:0;">
+            <select id="partner-rank">
+              <option value="">선택</option>
+              <option>하사</option><option>중사</option><option>상사</option><option>원사</option>
+              <option>준위</option><option>소위</option><option>중위</option><option>대위</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <input type="text" id="partner-name" placeholder="조원 성명">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="s-card fade-in">
+      <div class="s-title">📅 월별 첫 MOR 근무 날짜</div>
+      <div class="pattern-flow">
+        <span class="p-chip" style="background:rgba(255,213,79,.15);color:var(--mor);border-color:rgba(255,213,79,.3);">① MOR</span>
+        <span style="color:var(--muted);font-size:11px;padding:4px 1px;">→</span>
+        <span class="p-chip" style="background:rgba(239,154,154,.15);color:var(--mid);border-color:rgba(239,154,154,.3);">② MID</span>
+        <span style="color:var(--muted);font-size:11px;padding:4px 1px;">→</span>
+        <span class="p-chip" style="background:rgba(206,147,216,.15);color:var(--swi);border-color:rgba(206,147,216,.3);">③ SWI</span>
+        <span style="color:var(--muted);font-size:11px;padding:4px 1px;">→</span>
+        <span class="p-chip" style="background:rgba(129,199,132,.15);color:var(--aft);border-color:rgba(129,199,132,.3);">④ AFT</span>
+        <span style="color:var(--muted);font-size:11px;padding:4px 1px;">→</span>
+        <span class="p-chip" style="background:rgba(125,133,144,.1);color:var(--muted);border-color:rgba(125,133,144,.2);">⑤⑥ OFF</span>
+        <span style="color:var(--muted);font-size:11px;padding:4px 1px;">→ 반복</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;" id="month-tabs"></div>
+      <div class="form-group">
+        <label id="month-date-label">선택한 달의 첫 MOR 날짜</label>
+        <input type="date" id="first-date" style="color-scheme:dark;">
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:4px;">
+        <button class="btn btn-primary" style="flex:1;padding:10px;font-size:13px;" onclick="saveMonthDate()">이 달 저장</button>
+        <button style="flex:0 0 auto;padding:10px 14px;border-radius:11px;border:1px solid rgba(255,107,107,.3);background:rgba(255,107,107,.08);color:var(--red);font-size:12px;cursor:pointer;" onclick="clearMonthDate()">삭제</button>
+      </div>
+      <div style="background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.2);border-radius:9px;padding:9px 12px;font-size:11px;color:var(--muted);line-height:1.7;margin-top:8px;">
+        📌 등록된 달 → <strong style="color:var(--text);">확정 스케줄</strong><br>
+        📌 등록 안 된 달 → <strong style="color:var(--swi);">예상 스케줄</strong> (직전 달 기준 자동 계산)
+      </div>
+    </div>
+
+    <div class="s-card fade-in" id="preview-card" style="display:none;">
+      <div class="s-title">👁️ 스케줄 미리보기 (14일)</div>
+      <div class="preview-scroll" id="preview-content"></div>
+    </div>
+
+    <div class="s-card fade-in">
+      <div class="s-title">🌤️ 날씨 지역 설정</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.7;">
+        캘린더에 날씨 예보를 표시합니다.<br>도 → 시/군/구 → 읍/면/동 순으로 선택하세요.
+      </div>
+      <div class="region-selects">
+        <select class="region-select" id="region-sido" onchange="onSidoChange()">
+          <option value="">① 도 / 광역시 선택</option>
+        </select>
+        <select class="region-select" id="region-sigungu" onchange="onSigunguChange()" disabled>
+          <option value="">② 시 / 군 선택</option>
+        </select>
+        <select class="region-select" id="region-gu" onchange="onGuChange()" disabled>
+          <option value="">③ 구 / 읍면동 선택</option>
+        </select>
+        <select class="region-select" id="region-emd" onchange="onEmdChange()" disabled>
+          <option value="">④ 읍 / 면 / 동 선택 (선택사항)</option>
+        </select>
+      </div>
+      <div class="region-confirmed" id="region-confirmed">✅ 지역 설정 완료!</div>
+    </div>
+
+    <button class="btn btn-primary" id="start-btn" onclick="startScheduler()" disabled>📅 스케줄러 시작</button>
+    <button class="btn btn-danger" onclick="confirmReset()">🗑️ 전체 초기화</button>
+  </div>
+</div>
+
+<!-- ===== CALENDAR ===== -->
+<div id="page-calendar" class="page">
+  <div class="user-banner" id="user-banner">
+    <div>
+      <div class="user-banner-rank" id="banner-rank"></div>
+      <div class="user-banner-name" id="banner-name"></div>
+      <div class="user-banner-partner" id="banner-partner"></div>
+    </div>
+    <div class="user-banner-right">
+      <div class="user-banner-date" id="banner-date"></div>
+      <div class="user-banner-today" id="banner-today-shift"></div>
+      <div class="weather-badge" id="weather-badge" onclick="fetchWeather()" style="display:none;">
+        <span class="weather-icon" id="weather-icon">🌤️</span>
+        <span class="weather-temp" id="weather-temp">—</span>
+        <span class="weather-desc" id="weather-desc">날씨</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 명언 카드 -->
+  <div class="cal-wrap" style="padding-bottom:0;padding-top:10px;">
+    <div class="quote-card" id="quote-card">
+      <div class="quote-text" id="quote-text"></div>
+      <div class="quote-author" id="quote-author"></div>
+      <div class="quote-divider"></div>
+      <div class="quote-mil-label">📡 오늘의 방공·군사 지식</div>
+      <div class="quote-mil-text" id="quote-mil-text"></div>
+      <div class="quote-mil-author" id="quote-mil-author"></div>
+    </div>
+  </div>
+
+  <!-- 월별 뷰 -->
+  <div id="view-month" class="cal-wrap">
+
+    <!-- 다음 상번 카운터 -->
+    <div class="next-mor-card" id="next-mor-card" style="display:none;">
+      <div class="next-mor-top">
+        <div>
+          <div class="next-mor-label" id="next-mor-label">⏳ 다음 상번까지</div>
+          <div class="next-mor-val next-mor-pulse" id="next-mor-val">—</div>
+          <div class="next-mor-sub" id="next-mor-sub">—</div>
+        </div>
+        <div class="next-mor-icon" id="next-mor-icon">🎖️</div>
+      </div>
+      <div class="next-mor-mins-bar">
+        <div class="next-mor-mins-label">⏱ 총 분으로 환산</div>
+        <div class="next-mor-mins-val" id="next-mor-mins">—분</div>
+      </div>
+    </div>
+
+    <!-- 멘트 카드 -->
+    <div class="motto-card fade-in" id="motto-card" style="display:none;">
+      <div class="motto-text" id="motto-text"></div>
+    </div>
+
+    <!-- 시간 환산 재미 카드 -->
+    <div class="fun-card fade-in" id="fun-card" style="display:none;">
+      <div class="fun-card-title">⏳ 이 시간 동안 할 수 있는 것들</div>
+      <div id="fun-items"></div>
+    </div>
+
+    <div class="stats-bar fade-in">
+      <div class="stat-item"><div class="stat-val" id="stat-mor" style="color:var(--mor);">0</div><div class="stat-lbl">MOR</div></div>
+      <div class="stat-item"><div class="stat-val" id="stat-aft" style="color:var(--aft);">0</div><div class="stat-lbl">AFT</div></div>
+      <div class="stat-item"><div class="stat-val" id="stat-swi" style="color:var(--swi);">0</div><div class="stat-lbl">SWI</div></div>
+      <div class="stat-item"><div class="stat-val" id="stat-mid" style="color:var(--mid);">0</div><div class="stat-lbl">MID</div></div>
+      <div class="stat-item"><div class="stat-val" id="stat-off" style="color:var(--muted);">0</div><div class="stat-lbl">OFF</div></div>
+    </div>
+    <div class="cum-card fade-in">
+      <div class="cum-title" id="cum-title">⏱️ 이달 누적 근무 통계</div>
+      <div class="cum-grid">
+        <div class="cum-box work"><div class="cum-icon">💪</div><div class="cum-lbl">총 근무 시간</div><div class="cum-val" id="cum-work-time">—</div><div class="cum-sub" id="cum-work-days">—</div></div>
+        <div class="cum-box off"><div class="cum-icon">😴</div><div class="cum-lbl">총 OFF 시간</div><div class="cum-val" id="cum-off-time">—</div><div class="cum-sub" id="cum-off-days">—</div></div>
+      </div>
+      <div class="cum-bar-label"><span style="color:var(--mil);">근무</span><span id="cum-ratio-txt" style="color:var(--muted);">—</span><span style="color:var(--muted);">OFF</span></div>
+      <div class="cum-progress"><div class="cum-progress-fill" id="cum-progress-fill"></div></div>
+      <div style="text-align:center;margin-bottom:10px;">
+        <button class="cum-toggle" id="cum-toggle-btn" onclick="toggleCumMode()">📊 전체 누적 보기</button>
+      </div>
+      <div class="cum-compare"><div class="cum-compare-title" id="cum-compare-title">🏢 주간 근무자와 비교 (주 50시간 기준)</div><div class="cum-compare-body" id="cum-compare-body">—</div></div>
+    </div>
+    <div class="cal-header">
+      <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+      <div class="cal-month" id="cal-month-title"></div>
+      <button class="cal-nav" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--mor);"></div>MOR 07:30~12:00</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--aft);"></div>AFT 12:00~17:30</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--swi);"></div>SWI 17:30~00:00</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--mid);"></div>MID 00:00~07:30</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <!-- 주별 뷰 -->
+  <div id="view-week" class="week-wrap" style="display:none;">
+    <div class="week-nav">
+      <button class="week-nav-btn" onclick="changeWeek(-1)">‹</button>
+      <div><div class="week-title" id="week-title"></div><button class="today-btn" onclick="goToday()" style="margin-top:4px;">오늘로</button></div>
+      <button class="week-nav-btn" onclick="changeWeek(1)">›</button>
+    </div>
+    <div class="week-summary fade-in">
+      <div class="week-sum-title">📊 이번 주 근무 요약</div>
+      <div class="week-sum-grid">
+        <div class="week-sum-box"><div class="week-sum-val" id="week-work-count" style="color:var(--mil);">0</div><div class="week-sum-lbl">근무 일수</div></div>
+        <div class="week-sum-box"><div class="week-sum-val" id="week-work-time" style="color:var(--aft);">0h</div><div class="week-sum-lbl">총 근무시간</div></div>
+        <div class="week-sum-box"><div class="week-sum-val" id="week-off-count" style="color:var(--muted);">0</div><div class="week-sum-lbl">OFF 일수</div></div>
+        <div class="week-sum-box"><div class="week-sum-val" id="week-off-time" style="color:var(--swi);">0h</div><div class="week-sum-lbl">총 OFF시간</div></div>
+      </div>
+    </div>
+    <div id="week-days"></div>
+  </div>
+
+  <!-- 메모 전체보기 뷰 -->
+  <div id="view-memo" class="cal-wrap" style="display:none;">
+    <div class="memo-list-header fade-in">
+      <div class="memo-list-title">📝 메모 전체 보기</div>
+      <div class="memo-list-sub" id="memo-list-sub">메모가 없어요</div>
+    </div>
+    <div id="memo-list-container"></div>
+  </div>
+
+  <!-- 날씨 뷰 -->
+  <div id="view-weather" class="cal-wrap" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-family:'Black Han Sans',sans-serif;font-size:18px;color:var(--mil);">🌤️ 날씨 예보</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div id="weather-region-name" style="font-size:11px;color:var(--muted);"></div>
+        <button id="weather-refresh-btn" onclick="refreshWeatherNow()" style="display:none;background:rgba(79,195,247,.15);border:1px solid rgba(79,195,247,.3);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--mil);cursor:pointer;">🔄 새로고침</button>
+      </div>
+    </div>
+    <!-- 로컬 파일 안내 -->
+    <div id="weather-local-notice" style="display:none;background:rgba(255,213,79,.07);border:1px solid rgba(255,213,79,.25);border-radius:12px;padding:16px;margin-bottom:12px;text-align:center;">
+      <div style="font-size:22px;margin-bottom:8px;">🌐</div>
+      <div style="font-size:13px;color:var(--text);font-weight:700;margin-bottom:6px;">날씨 기능은 GitHub Pages에서 이용하세요</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7;">로컬 파일(file://)에서는 보안 정책으로<br>외부 API 호출이 차단됩니다.</div>
+    </div>
+    <!-- API 오류 메시지 -->
+    <div id="weather-error-msg" style="display:none;background:rgba(248,81,73,.07);border:1px solid rgba(248,81,73,.2);border-radius:12px;padding:14px;margin-bottom:12px;font-size:12px;color:var(--muted);text-align:center;"></div>
+    <!-- 지역 미설정 안내 -->
+    <div id="weather-no-region" style="text-align:center;padding:40px 20px;color:var(--muted);display:none;">
+      <div style="font-size:36px;margin-bottom:12px;">📍</div>
+      <div style="font-size:14px;line-height:1.7;margin-bottom:16px;">날씨 지역이 설정되지 않았어요.</div>
+      <button onclick="goSetup()" style="background:var(--mil);color:#000;border:none;border-radius:11px;padding:10px 22px;font-family:'Black Han Sans',sans-serif;font-size:14px;cursor:pointer;">⚙️ 설정으로 이동</button>
+    </div>
+    <!-- 날씨 로딩 -->
+    <div id="weather-loading" style="text-align:center;padding:40px;color:var(--muted);display:none;">
+      <div style="font-size:24px;">🔄</div><div style="margin-top:8px;font-size:13px;">날씨 불러오는 중...</div>
+    </div>
+    <!-- 오늘 날씨 크게 -->
+    <div id="weather-today-card" class="weather-today-card" style="display:none;">
+      <div class="weather-today-top">
+        <div>
+          <div class="weather-today-label">오늘</div>
+          <div class="weather-today-icon" id="wtc-icon">☀️</div>
+          <div class="weather-today-desc" id="wtc-desc">맑음</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="weather-today-temp" id="wtc-temp">—°C</div>
+          <div class="weather-today-range" id="wtc-range">최고 —° / 최저 —°</div>
+        </div>
+      </div>
+      <div class="weather-today-grid">
+        <div class="weather-today-box"><div class="wtb-label">강수확률</div><div class="wtb-val" id="wtc-rain">—%</div></div>
+        <div class="weather-today-box"><div class="wtb-label">풍속</div><div class="wtb-val" id="wtc-wind">—km/h</div></div>
+        <div class="weather-today-box"><div class="wtb-label">습도</div><div class="wtb-val" id="wtc-humidity">—%</div></div>
+        <div class="weather-today-box"><div class="wtb-label">체감온도</div><div class="wtb-val" id="wtc-feel">—°C</div></div>
+      </div>
+      <!-- 시간별 -->
+      <div class="weather-hourly-label">⏰ 시간별 예보</div>
+      <div class="weather-hourly-scroll" id="wtc-hourly"></div>
+    </div>
+    <!-- 7일 예보 -->
+    <div id="weather-week-list" style="display:none;">
+      <div class="weather-week-title">📅 7일 예보</div>
+      <div id="weather-week-items"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 도움말 모달 ===== -->
+<div class="modal-bg" id="help-bg" onclick="if(event.target===this)closeHelpDirect()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeHelpDirect()">✕</button>
+    <div class="modal-title" style="font-size:20px;">📖 빵포 스케줄러 도움말</div>
+    <div style="display:flex;gap:6px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none;">
+      <button class="help-tab active" onclick="switchHelp('basic',this)">기본사용</button>
+      <button class="help-tab" onclick="switchHelp('shift',this)">근무패턴</button>
+      <button class="help-tab" onclick="switchHelp('cal',this)">캘린더</button>
+      <button class="help-tab" onclick="switchHelp('week',this)">주별뷰</button>
+      <button class="help-tab" onclick="switchHelp('edit',this)">수정기능</button>
+      <button class="help-tab" onclick="switchHelp('stat',this)">통계</button>
+    </div>
+
+    <div class="help-section active" id="help-basic">
+      <div class="help-card"><div class="help-card-icon">👤</div><div class="help-card-body"><div class="help-card-title">① 사용자 정보 입력</div><div class="help-card-desc"><strong>계급</strong>과 <strong>성명</strong>을 입력하세요. 조원 정보도 입력하면 배너에 표시됩니다.</div></div></div>
+      <div class="help-card"><div class="help-card-icon">📅</div><div class="help-card-body"><div class="help-card-title">② 월별 첫 MOR 날짜 등록</div><div class="help-card-desc">달 탭에서 해당 달 선택 → 첫 MOR 날짜 입력 → <strong>이 달 저장</strong>.<br><span style="color:var(--green);">✓ 초록</span> = 등록 완료 | <span style="color:var(--swi);">예상</span> = 미등록</div></div></div>
+      <div class="help-card"><div class="help-card-icon">🚀</div><div class="help-card-body"><div class="help-card-title">③ 스케줄러 시작</div><div class="help-card-desc">정보와 날짜를 하나 이상 등록하면 시작 버튼이 활성화됩니다. 다음부터 앱 열면 캘린더 바로 표시.</div></div></div>
+      <div class="help-card"><div class="help-card-icon">💾</div><div class="help-card-body"><div class="help-card-title">데이터 저장</div><div class="help-card-desc">모든 데이터는 <strong>이 기기에만</strong> 저장됩니다. 앱을 닫아도 유지됩니다.</div></div></div>
+    </div>
+
+    <div class="help-section" id="help-shift">
+      <div class="help-card"><div class="help-card-icon">🔄</div><div class="help-card-body"><div class="help-card-title">5일 근무 사이클</div><div class="help-card-desc">아래 패턴이 반복됩니다.</div></div></div>
+      <div class="help-shift-table">
+        <div class="hst-row hst-header"><span>일차</span><span>근무</span><span>시간</span><span>비고</span></div>
+        <div class="hst-row"><span class="hst-day">1일차</span><span><span style="color:var(--mor);font-weight:700;">MOR</span>+<span style="color:var(--mid);font-weight:700;">MID◀</span></span><span style="font-size:10px;">07:30~12:00<br>00:00~07:30</span><span style="font-size:10px;color:var(--muted);">오전근무+자정출근</span></div>
+        <div class="hst-row"><span class="hst-day">2일차</span><span><span style="color:var(--mid);font-weight:700;">MID</span>+<span style="color:var(--swi);font-weight:700;">SWI▶</span></span><span style="font-size:10px;">~07:30퇴근<br>17:30~00:00</span><span style="font-size:10px;color:var(--muted);">새벽퇴근+저녁출근</span></div>
+        <div class="hst-row"><span class="hst-day">3일차</span><span><span style="color:var(--aft);font-weight:700;">AFT</span></span><span style="font-size:10px;">12:00~17:30</span><span style="font-size:10px;color:var(--muted);">오후근무</span></div>
+        <div class="hst-row"><span class="hst-day">4~5일차</span><span><span style="color:var(--muted);font-weight:700;">OFF</span></span><span style="font-size:10px;">비번</span><span style="font-size:10px;color:var(--muted);">2일 휴식</span></div>
+      </div>
+    </div>
+
+    <div class="help-section" id="help-cal">
+      <div class="help-card"><div class="help-card-icon">📅</div><div class="help-card-body"><div class="help-card-title">월별 캘린더</div><div class="help-card-desc"><strong>MID ◀</strong> = 자정 출근 | <strong>SWI ▶</strong> = 자정 퇴근<br><span style="color:var(--swi);">예상</span> 배지 = 미등록 달</div></div></div>
+      <div class="help-card"><div class="help-card-icon">🔴</div><div class="help-card-body"><div class="help-card-title">날짜 칸 표시</div><div class="help-card-desc"><span style="color:var(--green);">●</span> 초록점 = 메모 있음 | <span style="color:var(--swi);">●</span> 보라점 = 조원 변경됨</div></div></div>
+    </div>
+
+    <div class="help-section" id="help-week">
+      <div class="help-card"><div class="help-card-icon">📋</div><div class="help-card-body"><div class="help-card-title">주별 뷰</div><div class="help-card-desc">‹ › 버튼으로 주 이동, <strong>오늘로</strong> 버튼으로 현재 주로 이동.</div></div></div>
+      <div class="help-card"><div class="help-card-icon">⏰</div><div class="help-card-body"><div class="help-card-title">타임라인 바</div><div class="help-card-desc">00~24시 타임라인에 근무 시간대가 색상 바로 표시. 오늘은 빨간 현재시각 선 표시.</div></div></div>
+    </div>
+
+    <div class="help-section" id="help-edit">
+      <div class="help-card"><div class="help-card-icon">✏️</div><div class="help-card-body"><div class="help-card-title">날짜 탭 → 편집</div><div class="help-card-desc"><strong>🔄 변경</strong> — 근무를 다른 것으로 교체<br><strong>➕ 추가</strong> — 기존 근무에 추가 (예: MOR + AFT)<br>↩ 기본 패턴으로 되돌리기 가능. 저장 버튼으로 적용.</div></div></div>
+      <div class="help-card"><div class="help-card-icon">👥</div><div class="help-card-body"><div class="help-card-title">날짜별 조원 변경</div><div class="help-card-desc">특정 날만 다른 조원과 근무 시 입력. 보라색 점·카드 테두리로 표시됩니다.</div></div></div>
+      <div class="help-card"><div class="help-card-icon">💤</div><div class="help-card-body"><div class="help-card-title">수면 패턴 추천</div><div class="help-card-desc">AASM·WHO·CDC 기준으로 근무 유형별 최적 취침·기상 시간 안내.</div></div></div>
+      <div class="help-card"><div class="help-card-icon">📝</div><div class="help-card-body"><div class="help-card-title">메모 전체 보기</div><div class="help-card-desc">상단 탭 <strong>📝 메모</strong>에서 입력한 모든 메모를 최신순으로 확인. 항목 탭하면 해당 달 이동.</div></div></div>
+    </div>
+
+    <div class="help-section" id="help-stat">
+      <div class="help-card"><div class="help-card-icon">⏳</div><div class="help-card-body"><div class="help-card-title">다음 상번 카운터</div><div class="help-card-desc">MOR/MID/SWI/AFT 끝난 후 다음 상번까지 남은 시간을 상시 표시합니다.</div></div></div>
+      <div class="help-card"><div class="help-card-icon">😄</div><div class="help-card-body"><div class="help-card-title">시간 환산 재미 카드</div><div class="help-card-desc">다음 상번까지 남은 시간을 라면·축구·영화 등으로 환산해서 보여줍니다.</div></div></div>
+      <div class="help-card"><div class="help-card-icon">⏱️</div><div class="help-card-body"><div class="help-card-title">누적 근무 통계</div><div class="help-card-desc"><strong>이달 누적</strong> = 이번 달 오늘까지 | <strong>전체 누적</strong> = 모든 등록 달 합계</div></div></div>
+      <div class="help-card"><div class="help-card-icon">🏢</div><div class="help-card-body"><div class="help-card-title">주간 근무자 비교</div><div class="help-card-desc">주 50시간 기준 평일(공휴일 제외) 근무자와 이달/전체 근무시간을 비교합니다.</div></div></div>
+      <div class="help-card"><div class="help-card-icon">🗑️</div><div class="help-card-body"><div class="help-card-title">전체 초기화</div><div class="help-card-desc">헤더 🗑️ 또는 설정 하단 초기화 버튼. <span style="color:var(--red);">⚠️ 되돌릴 수 없어요!</span></div></div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 날짜 편집 모달 ===== -->
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-shift-hdr" id="modal-shift-hdr"></div>
+
+    <span class="sec-lbl">🔄 근무 변경</span>
+    <div class="shift-mode-tabs">
+      <button class="shift-mode-tab active" id="mode-replace" onclick="setShiftMode('replace')">🔄 변경</button>
+      <button class="shift-mode-tab" id="mode-add" onclick="setShiftMode('add')">➕ 추가</button>
+    </div>
+    <div class="shift-selected-preview" id="shift-preview">
+      <span style="color:var(--muted);font-size:11px;">아래에서 근무를 선택하세요</span>
+    </div>
+    <div class="shift-btns" id="shift-btns"></div>
+    <button class="shift-reset-btn" onclick="resetShiftToDefault()">↩ 기본 패턴으로 되돌리기</button>
+
+    <div style="height:8px;"></div>
+    <span class="sec-lbl">🏷️ 표시</span>
+    <div class="flag-btns">
+      <button class="flag-btn" data-flag="🎯" onclick="toggleFlag(this)">🎯 중요</button>
+      <button class="flag-btn" data-flag="⚠️" onclick="toggleFlag(this)">⚠️ 주의</button>
+      <button class="flag-btn" data-flag="🎉" onclick="toggleFlag(this)">🎉 이벤트</button>
+      <button class="flag-btn" data-flag="💊" onclick="toggleFlag(this)">💊 의무</button>
+      <button class="flag-btn" data-flag="📋" onclick="toggleFlag(this)">📋 행정</button>
+    </div>
+
+    <span class="sec-lbl">📝 메모</span>
+    <textarea class="memo-input" id="memo-input" placeholder="이날 메모를 입력하세요..."></textarea>
+
+    <div class="partner-day-wrap">
+      <div class="partner-day-title">👥 이날 조원 변경 (선택)</div>
+      <div class="partner-day-row">
+        <select id="modal-partner-rank">
+          <option value="">계급 선택</option>
+          <option>하사</option><option>중사</option><option>상사</option><option>원사</option>
+          <option>준위</option><option>소위</option><option>중위</option><option>대위</option>
+        </select>
+        <input type="text" id="modal-partner-name" placeholder="조원 성명">
+      </div>
+      <button class="partner-day-reset" onclick="resetDayPartner()">↩ 기본 조원으로 되돌리기</button>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveMemo()">저장</button>
+
+    <div class="sleep-card" id="sleep-card" style="display:none;">
+      <div class="sleep-title">💤 수면 패턴 추천 <span style="font-size:10px;color:var(--muted);font-family:Noto Sans KR,sans-serif;font-weight:400;">(AASM·WHO 기준)</span></div>
+      <div id="sleep-content"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 초기화 확인 모달 -->
+<div class="modal-bg" id="reset-modal-bg" onclick="if(event.target===this)closeResetModal()">
+  <div class="modal" style="padding:24px 20px 28px;">
+    <div class="modal-title" style="color:var(--red);font-size:18px;">🗑️ 전체 초기화</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:20px;">
+      모든 설정, 스케줄, 메모가 삭제됩니다.<br>
+      <strong style="color:var(--red);">되돌릴 수 없습니다!</strong> 정말 초기화하시겠습니까?
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeResetModal()" style="flex:1;padding:12px;border-radius:11px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;">취소</button>
+      <button onclick="doReset()" style="flex:1;padding:12px;border-radius:11px;border:none;background:var(--red);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Black Han Sans',sans-serif;">초기화</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 날씨 상세 모달 ===== -->
+<div class="modal-bg" id="weather-modal-bg" onclick="if(event.target===this)closeWeatherModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeWeatherModal()">✕</button>
+    <div class="modal-title" id="weather-modal-title">날씨 예보</div>
+    <div class="weather-modal-header">
+      <div class="weather-modal-icon" id="weather-modal-icon">🌤️</div>
+      <div>
+        <div class="weather-modal-temp" id="weather-modal-temp">—°C</div>
+        <div class="weather-modal-info" id="weather-modal-info">—</div>
+      </div>
+    </div>
+    <div class="weather-detail-grid">
+      <div class="weather-detail-box"><div class="weather-detail-label">최고기온</div><div class="weather-detail-val" id="wm-max">—</div></div>
+      <div class="weather-detail-box"><div class="weather-detail-label">최저기온</div><div class="weather-detail-val" id="wm-min">—</div></div>
+      <div class="weather-detail-box"><div class="weather-detail-label">강수확률</div><div class="weather-detail-val" id="wm-rain">—</div></div>
+      <div class="weather-detail-box"><div class="weather-detail-label">풍속</div><div class="weather-detail-val" id="wm-wind">—</div></div>
+    </div>
+    <div class="weather-hourly-title">시간대별 예보</div>
+    <div class="weather-hourly" id="wm-hourly"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// 상수
+// ============================================================
+const SHIFT_PATTERN = [
+  ['MOR','MID'],  // 1일차: MOR 07:30~12:00 + 자정 MID 출근
+  ['MID','SWI'],  // 2일차: MID ~07:30 퇴근 + SWI 17:30~00:00
+  ['AFT'],        // 3일차: AFT 12:00~17:30
+  ['OFF'],        // 4일차: 비번
+  ['OFF'],        // 5일차: 비번
+];
+const SHIFT_INFO = {
+  MOR:{label:'MOR', time:'07:30~12:00', mins:270, startH:7,  startM:30, endH:12, endM:0},
+  AFT:{label:'AFT', time:'12:00~17:30', mins:330, startH:12, startM:0,  endH:17, endM:30},
+  SWI:{label:'SWI', time:'17:30~00:00', mins:390, startH:17, startM:30, endH:24, endM:0},
+  MID:{label:'MID', time:'00:00~07:30', mins:450, startH:0,  startM:0,  endH:7,  endM:30},
+  OFF:{label:'비번', time:'근무없음',    mins:960, startH:0,  startM:0,  endH:0,  endM:0},
+};
+const SHIFT_COLORS = {MOR:'var(--mor)',AFT:'var(--aft)',SWI:'var(--swi)',MID:'var(--mid)',OFF:'var(--muted)'};
+const DAYS_KO = ['일','월','화','수','목','금','토'];
+const HOLIDAYS = {
+  '2025-01-01':'신정','2025-01-28':'설날연휴','2025-01-29':'설날','2025-01-30':'설날연휴',
+  '2025-03-01':'삼일절','2025-05-05':'어린이날','2025-05-12':'부처님오신날',
+  '2025-06-06':'현충일','2025-08-15':'광복절','2025-10-03':'개천절',
+  '2025-10-05':'추석','2025-10-06':'추석연휴','2025-10-09':'한글날','2025-12-25':'성탄절',
+  '2026-01-01':'신정','2026-01-28':'설날연휴','2026-01-29':'설날','2026-01-30':'설날연휴',
+  '2026-03-01':'삼일절','2026-05-05':'어린이날','2026-05-24':'부처님오신날',
+  '2026-06-06':'현충일','2026-08-15':'광복절',
+  '2026-09-24':'추석연휴','2026-09-25':'추석','2026-09-26':'추석연휴',
+  '2026-10-03':'개천절','2026-10-09':'한글날','2026-12-25':'성탄절',
+  '2027-01-01':'신정','2027-01-17':'설날연휴','2027-01-18':'설날','2027-01-19':'설날연휴',
+  '2027-03-01':'삼일절','2027-05-05':'어린이날','2027-06-06':'현충일','2027-08-15':'광복절',
+  '2027-10-03':'개천절','2027-10-09':'한글날','2027-12-25':'성탄절',
+};
+
+// ============================================================
+// 상태
+// ============================================================
+let userInfo       = {rank:'', name:'', partnerRank:'', partnerName:''};
+let monthFirstDates = {};   // {'YYYY-MM': 'YYYY-MM-DD'}
+let shiftOverrides  = {};   // {'YYYY-MM-DD': ['MOR','AFT',...]} 수동 근무 변경 (배열)
+let memoData        = {};   // {'YYYY-MM-DD': {memo:'', flag:''}}
+let partnerOverrides = {};  // {'YYYY-MM-DD': {rank:'', name:''}}
+let currentYear, currentMonth;
+let currentWeekStart = null;
+let selectedDate   = null;
+let cumMode        = false;
+let currentView    = 'month';
+let setupMonth     = null;
+
+// ============================================================
+// 유틸
+// ============================================================
+function dateKey(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function monthKey(y, m) { return y+'-'+String(m+1).padStart(2,'0'); }
+function parseKey(key) { const p=key.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+function escHtml(s) {
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtHM(mins) { return Math.floor(mins/60)+'시간 '+(mins%60)+'분'; }
+function fmtFull(mins) {
+  const s=mins*60, d=Math.floor(s/86400), r=s%86400;
+  return d+'일 '+Math.floor(r/3600)+'시간 '+Math.floor((r%3600)/60)+'분 '+(r%60)+'초';
+}
+function timeToPercent(h, m) { return ((h*60+m)/1440)*100; }
+// ============================================================
+// 다음 상번 카운터 (근무 종료 후 → 다음 근무까지)
+// MOR끝 → 다음MID / MID끝 → 다음SWI / SWI끝 → 다음AFT / AFT끝 → 다음MOR
+// ============================================================
+let morCounterTimer = null;
+
+// 근무 시작/종료 시간 (분 단위)
+const SHIFT_END_MIN = { MOR:12*60, MID:7*60+30, SWI:24*60, AFT:17*60+30 };
+const SHIFT_START_MIN = { MOR:7*60+30, MID:0, SWI:17*60+30, AFT:12*60 };
+
+function getShiftMentwt(nextSh, hours, mins, days, nextDate) {
+  const dateStr = nextDate.getMonth()+1+'월 '+nextDate.getDate()+'일';
+  const si = SHIFT_INFO[nextSh];
+  const timeStr = si ? si.time.split('~')[0] : '';
+
+  // AFT → MOR (OFF가 끼어 있어 시간이 길다)
+  if (nextSh === 'MOR') {
+    if (days >= 2) return { sub: dateStr+' '+timeStr+' 출근', emoji:'🎖️' };
+    if (days === 1) return { sub:'내일 '+timeStr+' 출근 — 마음의 준비를 하세요', emoji:'⚔️' };
+    if (hours >= 6)  return { sub:'슬슬 준비하셔야죠 ~ 😏', emoji:'🔥' };
+    if (hours >= 2)  return { sub:'⚠️ 출근까지 얼마 안 남았어요!', emoji:'⚡' };
+    if (hours >= 1)  return { sub:'🚨 지금 당장 준비하세요!', emoji:'🚨' };
+    return { sub:'🚀 출근 임박!! 지금 출발하세요!', emoji:'🚀' };
+  }
+
+  // MOR → MID (약 12시간, 낮에 쉬다가 자정 출근)
+  if (nextSh === 'MID') {
+    if (hours >= 10) return { sub:'오늘 자정 출근 — 낮잠 충전해두세요 😴', emoji:'💤' };
+    if (hours >= 6)  return { sub:'자정 전에 꼭 한숨 주무세요 🌙', emoji:'🌙' };
+    if (hours >= 3)  return { sub:'슬슬 취침 준비하세요 — 자정 출근입니다', emoji:'🌙' };
+    if (hours >= 1)  return { sub:'⚠️ 몇 시간 후 자정 출근! 지금 주무세요!', emoji:'⚠️' };
+    return { sub:'🚨 곧 자정 출근! 바로 준비하세요!', emoji:'🚨' };
+  }
+
+  // MID → SWI (약 10시간, 새벽에 자고 저녁 출근)
+  if (nextSh === 'SWI') {
+    if (hours >= 8)  return { sub:'충분히 주무세요 — 저녁 '+timeStr+' 출근입니다', emoji:'😴' };
+    if (hours >= 5)  return { sub:'기상 후 식사하고 준비하세요 🍚', emoji:'☀️' };
+    if (hours >= 2)  return { sub:'슬슬 몸 풀고 준비할 시간이에요', emoji:'🔥' };
+    if (hours >= 1)  return { sub:'⚠️ 저녁 출근 임박! 준비하세요!', emoji:'⚡' };
+    return { sub:'🚨 곧 '+timeStr+' 출근! 지금 출발하세요!', emoji:'🚨' };
+  }
+
+  // SWI → AFT (자정 퇴근 후 약 12시간, 낮 출근)
+  if (nextSh === 'AFT') {
+    if (hours >= 10) return { sub:'오늘 '+timeStr+' 출근 — 오전 중 기상하세요 ☀️', emoji:'🌅' };
+    if (hours >= 6)  return { sub:'슬슬 일어나야 할 시간이에요 😅', emoji:'☀️' };
+    if (hours >= 3)  return { sub:'식사하고 천천히 준비하세요 🍽️', emoji:'🔥' };
+    if (hours >= 1)  return { sub:'⚠️ '+timeStr+' 출근 임박! 준비하세요!', emoji:'⚡' };
+    return { sub:'🚨 곧 '+timeStr+' 출근! 지금 출발하세요!', emoji:'🚨' };
+  }
+
+  return { sub: dateStr+' '+timeStr+' 출근', emoji:'🎖️' };
+}
+
+function updateNextMorCounter() {
+  const card = document.getElementById('next-mor-card');
+  if (Object.keys(monthFirstDates).length === 0) {
+    card.style.cssText = 'display:none;margin:0;padding:0;border:none;height:0;overflow:hidden;';
+    return;
+  }
+
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const todayKey = dateKey(now);
+  const todayShifts = getShifts(todayKey);
+  const prevKey = dateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate()-1));
+  const prevShifts = getShifts(prevKey);
+
+  // 지금 상황에 따라 "다음 무슨 근무"를 보여줄지 결정
+  // 우선순위: 현재 시간 기준으로 가장 가까운 다음 근무
+  let nextShift = null;
+
+  // 오늘 근무 중 아직 안 한 것 or 이미 끝난 것 기준
+  if (todayShifts.includes('MOR') && nowMin < SHIFT_START_MIN.MOR) {
+    // MOR 출근 전 → 오늘 MOR가 다음 상번
+    nextShift = 'MOR';
+  } else if (todayShifts.includes('MOR') && nowMin >= SHIFT_START_MIN.MOR && nowMin < SHIFT_END_MIN.MOR) {
+    // MOR 근무 중 → 다음 MID
+    nextShift = 'MID';
+  } else if (todayShifts.includes('MOR') && nowMin >= SHIFT_END_MIN.MOR) {
+    // MOR 끝 → 다음 MID
+    nextShift = 'MID';
+  } else if (todayShifts.includes('MID') && prevShifts.includes('MOR') && nowMin < SHIFT_END_MIN.MID) {
+    // MID 근무 중(새벽) → 끝나면 SWI가 다음
+    nextShift = 'SWI';
+  } else if (todayShifts.includes('MID') && nowMin >= SHIFT_END_MIN.MID && !todayShifts.includes('SWI')) {
+    // MID만 있는 날 → 다음 SWI
+    nextShift = 'SWI';
+  } else if (todayShifts.includes('SWI') && nowMin < SHIFT_START_MIN.SWI) {
+    // SWI 출근 전 → 다음 SWI
+    nextShift = 'SWI';
+  } else if (todayShifts.includes('SWI') && nowMin >= SHIFT_START_MIN.SWI) {
+    // SWI 근무 중 or 끝(자정) → 다음 AFT
+    nextShift = 'AFT';
+  } else if (prevShifts.includes('SWI') && nowMin < SHIFT_START_MIN.AFT) {
+    // 전날 SWI → 오늘 새벽, 다음 AFT
+    nextShift = 'AFT';
+  } else if (todayShifts.includes('AFT') && nowMin < SHIFT_START_MIN.AFT) {
+    // AFT 출근 전
+    nextShift = 'AFT';
+  } else if (todayShifts.includes('AFT') && nowMin >= SHIFT_START_MIN.AFT && nowMin < SHIFT_END_MIN.AFT) {
+    // AFT 근무 중 → 다음 MOR
+    nextShift = 'MOR';
+  } else if (todayShifts.includes('AFT') && nowMin >= SHIFT_END_MIN.AFT) {
+    // AFT 끝 → 다음 MOR
+    nextShift = 'MOR';
+  } else if (todayShifts[0] === 'OFF') {
+    // 비번 → 다음 MOR
+    nextShift = 'MOR';
+  } else {
+    // 기타: 그냥 다음 MOR
+    nextShift = 'MOR';
+  }
+
+  // 다음 해당 근무 날짜 찾기
+  let nextDate = null;
+  // 오늘 포함해서 찾기 (오늘 아직 안 한 근무 포함)
+  for (let i = 0; i <= 10; i++) {
+    const d = new Date(now); d.setDate(d.getDate()+i);
+    const sh = getShifts(dateKey(d));
+    if (!sh.includes(nextShift)) continue;
+    // 오늘이면 출근 시간이 아직 안 됐는지 확인
+    if (i === 0) {
+      if (nowMin < SHIFT_START_MIN[nextShift]) { nextDate = d; break; }
+    } else {
+      nextDate = d; break;
+    }
+  }
+  if (!nextDate) {
+    card.style.cssText = 'display:none;margin:0;padding:0;border:none;height:0;overflow:hidden;';
+    return;
+  }
+
+  const startMin = SHIFT_START_MIN[nextShift];
+  const nextTime = new Date(nextDate);
+  nextTime.setHours(Math.floor(startMin/60), startMin%60, 0, 0);
+  const diffMs = nextTime - now;
+  if (diffMs <= 0) {
+    card.style.cssText = 'display:none;margin:0;padding:0;border:none;height:0;overflow:hidden;';
+    return;
+  }
+
+  const totalMins = Math.floor(diffMs / 60000);
+  const days  = Math.floor(totalMins / 1440);
+  const hours = Math.floor((totalMins % 1440) / 60);
+  const mins  = totalMins % 60;
+
+  let val;
+  if (days > 0)       val = days+'일 '+hours+'시간 '+mins+'분';
+  else if (hours > 0) val = hours+'시간 '+mins+'분';
+  else                val = mins+'분';
+
+  const { sub, emoji } = getShiftMentwt(nextShift, hours, mins, days, nextDate);
+  const nextSi = SHIFT_INFO[nextShift];
+  const shLabel = nextShift==='MID'?'MID ◀':nextShift==='SWI'?'SWI ▶':nextShift;
+
+  document.getElementById('next-mor-label').textContent = '⏳ 다음 '+shLabel+' ('+nextSi.time+')까지';
+  document.getElementById('next-mor-val').textContent = val;
+  document.getElementById('next-mor-sub').textContent  = sub;
+  document.getElementById('next-mor-icon').textContent = emoji;
+  document.getElementById('next-mor-mins').textContent = totalMins.toLocaleString()+'분';
+
+  // 카드 표시 (스타일 복원)
+  card.style.cssText = '';
+  card.style.display = 'block';
+
+  // 멘트 카드 업데이트
+  updateMottoCard(nextShift, days, hours, mins);
+  // 시간 환산 재미 카드
+  updateFunCard(totalMins);
+
+  if (!morCounterTimer) {
+    morCounterTimer = setInterval(() => updateNextMorCounter(), 60000);
+  }
+}
+
+function updateMottoCard(nextShift, days, hours, mins, totalMins) {
+  const card = document.getElementById('motto-card');
+  const text = document.getElementById('motto-text');
+  if (!card || !text) return;
+
+  let msg = '';
+
+  if (nextShift === 'MOR') {
+    if (days >= 2) {
+      msg = '🎖️ <span class="highlight">'+days+'일 후 상번!</span><br>비번을 즐기세요. 몸 관리도 잊지 마세요 💪';
+    } else if (days === 1) {
+      msg = '⚔️ <span class="highlight">내일 07:30 출근</span><br>마음의 준비를 하세요. 오늘 충분히 쉬어두세요 😴';
+    } else if (hours >= 6) {
+      msg = '🔥 슬슬 준비하셔야죠 ~<br><strong>취침 전 알람 꼭 맞춰두세요!</strong> ⏰';
+    } else if (hours >= 2) {
+      msg = '⚡ <strong>출근까지 얼마 안 남았어요!</strong><br>복장 점검하고 미리 준비하세요 🎽';
+    } else if (hours >= 1) {
+      msg = '🚨 <span class="highlight">지금 당장 준비하세요!</span><br>지각하면 안 됩니다! 서두르세요!';
+    } else {
+      msg = '🚀 <span class="highlight">출근 임박!!</span> 지금 출발하세요!<br>뛰어요!! 💨';
+    }
+  } else if (nextShift === 'MID') {
+    if (hours >= 10) {
+      msg = '💤 <span class="highlight">오늘 자정 출근</span><br>지금 낮잠 충전 필수! 안 자면 자정에 힘들어요 😴';
+    } else if (hours >= 6) {
+      msg = '🌙 <strong>자정 전에 꼭 한숨 주무세요</strong><br>MID는 체력 소모가 커요. 미리 쉬어두세요 💤';
+    } else if (hours >= 3) {
+      msg = '🌙 <strong>슬슬 취침 준비하세요</strong><br>자정 출근 — 지금 눈 붙여야 합니다!';
+    } else if (hours >= 1) {
+      msg = '⚠️ <span class="highlight">몇 시간 후 자정 출근!</span><br>지금 당장 주무세요! 알람 맞추고 눈 감으세요 😵';
+    } else {
+      msg = '🚨 <span class="highlight">곧 자정 출근!</span><br>이제 잘 시간 없어요 — 바로 준비하세요!';
+    }
+  } else if (nextShift === 'SWI') {
+    if (hours >= 8) {
+      msg = '😴 <span class="highlight">저녁 17:30 출근</span><br>충분히 주무세요. 일어나서 여유롭게 준비하세요 ☀️';
+    } else if (hours >= 5) {
+      msg = '☀️ <strong>기상 후 식사하고 준비하세요</strong><br>SWI 전에 든든하게 먹어두세요 🍚';
+    } else if (hours >= 2) {
+      msg = '🔥 <strong>슬슬 몸 풀 시간</strong><br>출근 준비 시작하세요. 늦으면 안 돼요!';
+    } else if (hours >= 1) {
+      msg = '⚡ <span class="highlight">저녁 출근 임박!</span><br>준비 다 됐나요? 마지막 점검하세요 ✅';
+    } else {
+      msg = '🚨 <span class="highlight">곧 17:30 출근!</span><br>지금 출발하세요!! 💨';
+    }
+  } else if (nextShift === 'AFT') {
+    if (hours >= 10) {
+      msg = '🌅 <span class="highlight">오늘 12:00 출근</span><br>자정 퇴근 고생하셨어요! 오전 중 기상하세요 ☀️';
+    } else if (hours >= 6) {
+      msg = '☀️ <strong>슬슬 일어나야 할 시간</strong><br>AFT 출근 전 식사 챙기는 거 잊지 마세요 🍳';
+    } else if (hours >= 3) {
+      msg = '🔥 <strong>식사하고 천천히 준비하세요</strong><br>여유 있을 때 미리 움직이세요!';
+    } else if (hours >= 1) {
+      msg = '⚡ <span class="highlight">12:00 출근 임박!</span><br>복장 점검하고 지금 준비하세요 🎽';
+    } else {
+      msg = '🚨 <span class="highlight">곧 12:00 출근!</span><br>지금 바로 출발하세요!! 💨';
+    }
+  }
+
+  if (msg) {
+    text.innerHTML = msg;
+    card.style.display = 'block';
+  } else {
+    card.style.display = 'none';
+  }
+}
+
+// ============================================================
+// 시간 환산 재미 카드
+// ============================================================
+function updateFunCard(totalMins) {
+  const card = document.getElementById('fun-card');
+  const cont = document.getElementById('fun-items');
+  if (!card || !cont || totalMins <= 0) { if(card) card.style.display='none'; return; }
+
+  // 각종 환산 데이터
+  const items = [
+    { icon:'🍜', label:'3분 라면 완성',          unit: 3,       suffix:'번' },
+    { icon:'⚽', label:'축구 경기 관람 (90분)',   unit: 90,      suffix:'경기' },
+    { icon:'🎬', label:'영화 한 편 (120분)',       unit: 120,     suffix:'편' },
+    { icon:'🚗', label:'천안↔부산 편도 (약 220분)', unit: 220,   suffix:'번' },
+    { icon:'✈️', label:'김포↔후쿠오카 왕복 (약 180분)', unit: 180,  suffix:'번' },
+    { icon:'🏃', label:'마라톤 완주 (약 240분)',   unit: 240,     suffix:'번' },
+    { icon:'🍺', label:'치맥 한 세트 (150분)',     unit: 150,     suffix:'번' },
+    { icon:'🎮', label:'롤 한 판 (35분)',          unit: 35,      suffix:'판' },
+  ];
+
+  let html = '';
+  items.forEach(item => {
+    const count = Math.floor(totalMins / item.unit);
+    if (count <= 0) return;
+    const countStr = count >= 10000
+      ? (count/10000).toFixed(1)+'만'
+      : count.toLocaleString();
+    html += '<div class="fun-item">'
+      + '<div class="fun-item-left">'
+      + '<div class="fun-item-icon">'+item.icon+'</div>'
+      + '<div class="fun-item-label">'+item.label+'</div>'
+      + '</div>'
+      + '<div class="fun-item-val">'+countStr+' '+item.suffix+'</div>'
+      + '</div>';
+  });
+
+  if (!html) { card.style.display='none'; return; }
+  cont.innerHTML = html;
+  card.style.display = 'block';
+}
+
+// ============================================================
+// 명언 카드
+// ============================================================
+const QUOTES = [
+  // ════════════════════════════════════
+  // 세계 위인 명언 (60개)
+  // ════════════════════════════════════
+  {text:"인생은 자전거를 타는 것과 같다. 균형을 잡으려면 계속 움직여야 한다.", author:"— 알베르트 아인슈타인"},
+  {text:"나는 실패한 것이 아니다. 작동하지 않는 1만 가지 방법을 발견했을 뿐이다.", author:"— 토마스 에디슨"},
+  {text:"위대한 일을 이루는 유일한 방법은 자신이 하는 일을 사랑하는 것이다.", author:"— 스티브 잡스"},
+  {text:"성공은 열정을 잃지 않고 실패에서 실패로 나아가는 것이다.", author:"— 윈스턴 처칠"},
+  {text:"당신이 할 수 있다고 생각하든, 할 수 없다고 생각하든 — 당신이 옳다.", author:"— 헨리 포드"},
+  {text:"오늘 할 수 있는 일을 내일로 미루지 마라.", author:"— 벤자민 프랭클린"},
+  {text:"지식은 힘이다.", author:"— 프랜시스 베이컨"},
+  {text:"가장 어두운 밤도 끝나고 태양은 뜬다.", author:"— 빅토르 위고"},
+  {text:"삶이 그대를 속일지라도 슬퍼하거나 노하지 말라. 슬픈 날을 참고 견디면 즐거운 날이 오리니.", author:"— 알렉산드르 푸쉬킨"},
+  {text:"준비된 자에게 행운이 찾아온다.", author:"— 루이 파스퇴르"},
+  {text:"용기는 두려움의 부재가 아니라, 두려움보다 더 중요한 것이 있다고 판단하는 것이다.", author:"— 넬슨 만델라"},
+  {text:"강한 사람이 살아남는 것이 아니라, 변화에 적응하는 자가 살아남는다.", author:"— 찰스 다윈"},
+  {text:"천 리 길도 한 걸음부터.", author:"— 노자"},
+  {text:"배움에는 끝이 없다. 삶이 있는 한 배움은 계속된다.", author:"— 세네카"},
+  {text:"고난의 시기에 동요하지 않는 것, 이것이 뛰어난 인물의 증거다.", author:"— 베토벤"},
+  {text:"지금 서 있는 곳이 어디든, 계속 앞으로 나아가라.", author:"— 마틴 루터 킹"},
+  {text:"끝날 때까지는 끝난 게 아니다.", author:"— 요기 베라"},
+  {text:"사람이 자신이 하는 일에 열중할 때 행복은 자연히 따라온다.", author:"— 톨스토이"},
+  {text:"인내, 또 인내. 가장 깊은 고뇌를 통하여 무언가를 얻을 수 있다.", author:"— 빈센트 반 고흐"},
+  {text:"적은 밖에 있는 것이 아니라 내 안에 있다. 나를 극복하는 순간 진정한 승자가 된다.", author:"— 칭기즈칸"},
+  {text:"모든 위대한 꿈은 몽상가로부터 시작된다.", author:"— 해리엇 터브먼"},
+  {text:"타인의 고통을 덜어줄 수 있는 한, 삶은 헛되지 않다.", author:"— 헬렌 켈러"},
+  {text:"도중에 포기하지 말라. 최후의 성공을 거둘 때까지 밀고 나가자.", author:"— 나폴레옹 보나파르트"},
+  {text:"당신이 포기하지 않는 한, 실패는 없다.", author:"— 잭 마"},
+  {text:"자신을 믿어라. 당신이 알고 있는 것보다 훨씬 더 능력이 있다.", author:"— 시어도어 루스벨트"},
+  {text:"두려워하지 말라. 실수는 용기의 증거다.", author:"— 토마스 왓슨 (IBM 창업자)"},
+  {text:"우리가 상상할 수 있는 모든 것은 현실이다.", author:"— 파블로 피카소"},
+  {text:"불행하지 않은 삶은 없다. 하지만 불행에서 배우는 삶은 위대하다.", author:"— 소크라테스"},
+  {text:"나 자신을 아는 것이 모든 지혜의 시작이다.", author:"— 아리스토텔레스"},
+  {text:"가장 위험한 세계관은 세상을 보지 못한 사람들의 세계관이다.", author:"— 알렉산더 폰 훔볼트"},
+  {text:"혁신은 지도자와 추종자를 구별한다.", author:"— 스티브 잡스"},
+  {text:"당신의 시간은 한정되어 있다. 다른 사람의 삶을 사느라 낭비하지 마라.", author:"— 스티브 잡스"},
+  {text:"진정으로 웃으려면 고통을 참아야 하며, 나아가 고통을 즐길 줄 알아야 한다.", author:"— 찰리 채플린"},
+  {text:"꿈을 크게 가져라. 꿈은 공짜다.", author:"— 케빈 코스트너"},
+  {text:"성공의 비밀은 남들이 자고 있을 때 일어나는 것이다.", author:"— 조나단 스위프트"},
+  {text:"나는 내 운명의 주인이고, 내 영혼의 선장이다.", author:"— 윌리엄 어니스트 헨리"},
+  {text:"작은 일에 충성하는 자가 큰 일에도 충성한다.", author:"— 성경 누가복음"},
+  {text:"한 번도 실수하지 않은 사람은 한 번도 새로운 것을 시도하지 않은 사람이다.", author:"— 알베르트 아인슈타인"},
+  {text:"불가능이란 용어는 바보들의 사전에나 있는 말이다.", author:"— 나폴레옹 보나파르트"},
+  {text:"강물은 돌을 돌아가지만 결국 바다에 도달한다.", author:"— 공자"},
+  {text:"남을 아는 자는 지혜롭고, 자기를 아는 자는 밝다.", author:"— 노자"},
+  {text:"가장 큰 영광은 한 번도 실패하지 않음이 아니라, 실패할 때마다 일어서는 것이다.", author:"— 공자"},
+  {text:"지금 이 순간에 집중하라. 과거는 이미 지났고 미래는 아직 오지 않았다.", author:"— 붓다"},
+  {text:"고통 없이는 얻는 것도 없다.", author:"— 벤자민 프랭클린"},
+  {text:"삶을 사랑하는 법을 배워라. 그것이 가장 위대한 예술이다.", author:"— 레오나르도 다빈치"},
+  {text:"위기는 모든 위대한 성공의 어머니다.", author:"— 프리드리히 니체"},
+  {text:"나는 내가 모른다는 것을 안다.", author:"— 소크라테스"},
+  {text:"분노는 어리석음으로 시작되어 후회로 끝난다.", author:"— 피타고라스"},
+  {text:"세상을 바꾸고 싶다면 먼저 자기 자신을 바꿔라.", author:"— 마하트마 간디"},
+  {text:"눈이 없는 자도 꿈을 꾸고, 귀가 없는 자도 음악을 듣는다.", author:"— 헬렌 켈러"},
+  {text:"모든 인간은 태어날 때부터 알고자 하는 욕망을 지닌다.", author:"— 아리스토텔레스"},
+  {text:"가장 용감한 행동은 여전히 스스로 생각하고 큰 소리로 말하는 것이다.", author:"— 코코 샤넬"},
+  {text:"사람은 자신이 반복적으로 하는 것의 결과다. 따라서 탁월함은 행위가 아닌 습관이다.", author:"— 아리스토텔레스"},
+  {text:"인생의 비극은 죽는 것이 아니다. 살아있는 동안 내면이 죽는 것이다.", author:"— 알버트 슈바이처"},
+  {text:"무지는 지식보다 더 자신감을 갖게 한다.", author:"— 찰스 다윈"},
+  {text:"남에게 대접을 받고자 하는 대로 너희도 남을 대접하라.", author:"— 예수 그리스도"},
+  {text:"신은 주사위를 던지지 않는다.", author:"— 알베르트 아인슈타인"},
+  {text:"삶은 가까이서 보면 비극이지만, 멀리서 보면 희극이다.", author:"— 찰리 채플린"},
+  {text:"성공한 사람이 되려 하기보다 가치 있는 사람이 되려 하라.", author:"— 알베르트 아인슈타인"},
+  {text:"세상에서 가장 강한 것은 부드러움이다.", author:"— 노자"},
+
+  // ════════════════════════════════════
+  // 한국 위인 명언 (40개)
+  // ════════════════════════════════════
+  {text:"위국헌신 군인본분. 나라를 위하여 헌신하는 것이 군인의 본분이다.", author:"— 안중근 의사"},
+  {text:"역사를 잊은 민족에게 미래는 없다.", author:"— 단재 신채호"},
+  {text:"오늘 내가 남긴 발자취는 후세의 사람들에게 이정표가 된다.", author:"— 백범 김구"},
+  {text:"가벼이 움직이지 마라. 침착하게 태산같이 무겁게 행동하라.", author:"— 이순신 장군"},
+  {text:"부지런하고, 부지런하고, 부지런하라.", author:"— 다산 정약용"},
+  {text:"독서야말로 인간이 해야 할 첫째의 깨끗한 일이다.", author:"— 다산 정약용"},
+  {text:"백성을 위해 일하는 것이 진정한 지도자의 길이다.", author:"— 세종대왕"},
+  {text:"말은 망령되게 하지 말아야 한다. 지성을 갖추되 자랑하지 말라.", author:"— 신사임당"},
+  {text:"사람은 배우지 않으면 안 된다. 학문은 개인과 사회 발전의 근본이다.", author:"— 퇴계 이황"},
+  {text:"남을 너그럽게 받아들이는 사람은 사람들의 마음을 얻는다.", author:"— 율곡 이이"},
+  {text:"우리는 우리나라를 우리 스스로 지켜야 한다.", author:"— 유관순 열사"},
+  {text:"남의 장점은 배우고 잘못은 너그럽게 용서하라.", author:"— 조광조"},
+  {text:"말할 때는 실행할 것을, 실행할 때는 말한 것을 돌아보라.", author:"— 성여신"},
+  {text:"학문하는 사람은 반드시 참된 마음으로 하라.", author:"— 율곡 이이"},
+  {text:"나는 대한의 독립과 동양의 평화를 위해 이 일을 했다.", author:"— 안중근 의사"},
+  {text:"죽고자 하면 살고, 살고자 하면 죽는다.", author:"— 이순신 장군"},
+  {text:"책을 읽지 않는 사람은 모르는 것이 많고, 책을 읽는 사람은 알고 싶은 것이 많다.", author:"— 세종대왕"},
+  {text:"나라가 위태로울 때 목숨을 바치는 것이 선비의 도리다.", author:"— 성삼문"},
+  {text:"내 죽음을 적에게 알리지 마라.", author:"— 이순신 장군"},
+  {text:"네 이웃을 사랑하라. 그것이 가장 큰 계명이다.", author:"— 원효대사"},
+  {text:"사람은 자기 자신을 이기는 것이 가장 어렵고, 가장 위대한 승리다.", author:"— 퇴계 이황"},
+  {text:"하루라도 책을 읽지 않으면 입안에 가시가 돋는다.", author:"— 안중근 의사"},
+  {text:"참된 용기는 죽음을 두려워하지 않는 것이 아니라, 옳은 일을 위해 기꺼이 나서는 것이다.", author:"— 백범 김구"},
+  {text:"진정한 애국자는 조국을 위해 무엇을 할 것인가를 묻는다.", author:"— 도산 안창호"},
+  {text:"힘을 기르자. 힘이 없으면 어떤 일도 이룰 수 없다.", author:"— 도산 안창호"},
+  {text:"게으른 자는 기회가 와도 잡지 못하고, 부지런한 자는 기회를 만들어 낸다.", author:"— 다산 정약용"},
+  {text:"글을 배우면 세상을 이롭게 할 수 있어야 한다.", author:"— 세종대왕"},
+  {text:"작은 일에도 최선을 다하면, 그것이 모여 위대한 업적이 된다.", author:"— 장영실"},
+  {text:"나라의 힘은 국민 한 사람 한 사람의 교육에서 나온다.", author:"— 박은식"},
+  {text:"강한 자만이 살아남는 것이 아니라, 끝까지 포기하지 않는 자가 살아남는다.", author:"— 이봉창 의사"},
+  {text:"무릇 장수된 자는 자신을 알아야 적을 안다.", author:"— 이순신 장군"},
+  {text:"배움의 끝에는 반드시 실천이 있어야 한다.", author:"— 율곡 이이"},
+  {text:"어렵고 힘든 시간이 길어질수록 그 뒤의 보람도 커진다.", author:"— 윤봉길 의사"},
+  {text:"조국은 내가 사랑해야 할 가장 소중한 것이다.", author:"— 윤봉길 의사"},
+  {text:"아는 것과 실천하는 것 사이에는 넓은 강이 있다.", author:"— 퇴계 이황"},
+  {text:"사람의 가치는 그가 남긴 발자취로 판단된다.", author:"— 백범 김구"},
+  {text:"진정한 자유는 자기 자신을 다스릴 수 있을 때 비로소 얻어진다.", author:"— 도산 안창호"},
+  {text:"한 번 맺은 뜻은 끝까지 지켜라.", author:"— 성삼문"},
+  {text:"강직하고 굳센 의지 없이는 아무것도 이룰 수 없다.", author:"— 안중근 의사"},
+  {text:"넘어지는 것이 실패가 아니다. 넘어진 채로 있는 것이 실패다.", author:"— 도산 안창호"}
+];
+
+const MIL_KNOWLEDGE = [
+// ════════════════════════════════════
+  // 군사·방공 전문 지식 (100개)
+  // ════════════════════════════════════
+
+  // ── 레이다 기본 원리 (20개) ──
+  {text:"📡 레이다(RADAR)는 Radio Detection And Ranging의 약자다. 전파를 발사하고 반사파를 수신해 목표물의 거리·방위·고도를 탐지한다.", author:"— 레이다 기초"},
+  {text:"📡 레이다의 핵심 원리는 전파의 왕복 시간(TOF: Time of Flight)이다. 빛의 속도(3×10⁸ m/s)로 왕복 시간을 계산해 거리를 산출한다.", author:"— 레이다 기초"},
+  {text:"📡 레이다 방정식: 수신 전력은 송신 전력·안테나 이득·표적 RCS에 비례하고, 거리의 4제곱에 반비례한다.", author:"— 레이다 기초"},
+  {text:"📡 RCS(Radar Cross Section, 레이다 반사 면적)란 목표물이 레이다 전파를 얼마나 반사하는지를 나타내는 지표다. 스텔스 기술은 RCS를 극소화한다.", author:"— 레이다 기초"},
+  {text:"📡 도플러 효과(Doppler Effect): 목표물이 레이다에 접근하면 반사파 주파수가 높아지고, 멀어지면 낮아진다. 이를 이용해 목표물의 속도를 측정한다.", author:"— 레이다 기초"},
+  {text:"📡 PRF(Pulse Repetition Frequency, 펄스 반복 주파수)는 레이다가 1초에 발사하는 펄스 수다. PRF가 높을수록 탐지 갱신율이 높지만 최대 탐지 거리가 줄어든다.", author:"— 레이다 기초"},
+  {text:"📡 레이다 주파수 대역: L밴드(1~2GHz)는 장거리 탐색, S밴드(2~4GHz)는 중거리 감시, X밴드(8~12GHz)는 정밀 추적에 주로 사용된다.", author:"— 레이다 주파수"},
+  {text:"📡 AESA(Active Electronically Scanned Array) 레이다: 수천 개의 T/R(송수신) 모듈이 각각 독립적으로 빔을 형성한다. 기계식 안테나 없이 전자적으로 빔을 조향할 수 있어 반응속도가 매우 빠르다.", author:"— 레이다 기술"},
+  {text:"📡 PESA(Passive Electronically Scanned Array) 레이다: 하나의 송신원에서 위상 변환기로 빔을 조향하는 방식. AESA보다 구조가 단순하지만 다중 빔 형성이 제한적이다.", author:"— 레이다 기술"},
+  {text:"📡 MTI(Moving Target Indicator): 고정된 지형 반사파(클러터)를 제거하고 움직이는 목표물만 추출하는 레이다 신호처리 기법이다.", author:"— 레이다 신호처리"},
+  {text:"📡 클러터(Clutter): 레이다가 수신하는 지형·기상·해면 등 비표적 반사파. 클러터 속에서 표적을 식별하는 것이 레이다 운용의 핵심 과제 중 하나다.", author:"— 레이다 기초"},
+  {text:"📡 ECM(Electronic Countermeasure, 전자전 재밍): 적 레이다를 교란하기 위해 강한 잡음 신호를 발사하거나 기만 신호를 보내는 기술이다.", author:"— 전자전 기초"},
+  {text:"📡 ECCM(Electronic Counter-Countermeasure): ECM에 대응하는 기술. 주파수 호핑, 코딩, 적응형 필터링 등으로 재밍 환경에서도 표적을 탐지한다.", author:"— 전자전 기초"},
+  {text:"📡 레이다 탐지 거리는 안테나 크기, 송신 출력, 파장, 표적 RCS에 의해 결정된다. 안테나가 클수록, 출력이 강할수록 탐지 거리가 늘어난다.", author:"— 레이다 기초"},
+  {text:"📡 단펄스(Monopulse) 추적: 한 번의 펄스 수신으로 표적의 각도를 정밀하게 측정하는 기법. 지대공 미사일 추적 레이다에 널리 사용된다.", author:"— 레이다 추적"},
+  {text:"📡 TWS(Track While Scan): 탐색 레이다가 회전하면서 동시에 다수의 표적을 추적하는 운용 방식. 탐색과 추적을 병행할 수 있다.", author:"— 레이다 운용"},
+  {text:"📡 OTH(Over The Horizon) 레이다: 전리층에서 반사된 전파를 이용해 수백~수천km 너머의 표적을 탐지하는 레이다다.", author:"— 레이다 기술"},
+  {text:"📡 레이다 빔폭(Beamwidth): 안테나에서 방사되는 전파 빔의 각도 폭. 빔폭이 좁을수록 각도 분해능이 높아 정밀 추적에 유리하다.", author:"— 레이다 기초"},
+  {text:"📡 SAR(Synthetic Aperture Radar, 합성개구레이다): 이동하는 플랫폼에서 다수의 펄스를 합성해 고분해능 영상을 획득하는 레이다. 야간·악천후에도 지상 표적 식별이 가능하다.", author:"— 레이다 기술"},
+  {text:"📡 비콘(Beacon) 레이다: 아군 항공기·함정에 트랜스폰더를 장착해 피아 식별(IFF)을 수행한다. 적 레이다에 의한 오인 교전을 방지하는 핵심 체계다.", author:"— 레이다 운용"},
+
+  // ── 탐지·추적 원리 (20개) ──
+  {text:"🎯 탐지(Detection)란 표적의 존재 여부를 확인하는 과정이다. 탐지 확률(Pd)과 오경보 확률(Pfa)은 트레이드오프 관계에 있다.", author:"— 탐지·추적 기초"},
+  {text:"🎯 추적(Tracking)이란 탐지된 표적의 위치·속도·방향을 연속적으로 측정해 미래 위치를 예측하는 과정이다.", author:"— 탐지·추적 기초"},
+  {text:"🎯 탐지 거리 계산의 핵심은 SNR(Signal-to-Noise Ratio, 신호 대 잡음비)다. SNR이 높을수록 탐지 확률이 높아진다.", author:"— 탐지·추적 기초"},
+  {text:"🎯 다표적 추적(Multi-Target Tracking, MTT): 동시에 다수의 표적을 추적하는 기술. 지대공 미사일 체계는 수십~수백 개의 표적을 동시에 추적할 수 있어야 한다.", author:"— 추적 기술"},
+  {text:"🎯 칼만 필터(Kalman Filter): 노이즈가 포함된 측정값에서 표적의 실제 상태(위치·속도)를 최적으로 추정하는 알고리즘. 미사일 유도·추적의 핵심 기술이다.", author:"— 추적 알고리즘"},
+  {text:"🎯 표적 식별(Target Classification): 탐지된 물체가 항공기·미사일·드론인지, 아군·적군인지를 구분하는 과정. ELINT·ESM 신호·비행 패턴 분석이 활용된다.", author:"— 표적 식별"},
+  {text:"🎯 교전 구역(Engagement Zone): 지대공 미사일이 표적을 요격할 수 있는 3차원 공간. 최소 교전 거리, 최대 교전 거리, 고도 한계로 정의된다.", author:"— 방공 기초"},
+  {text:"🎯 탐지 레이다 → 추적 레이다 → 화기통제 체계(FCS) → 미사일 발사의 단계로 교전이 진행된다.", author:"— 방공 체계 기초"},
+  {text:"🎯 레이다 데이터율(Data Rate): 레이다가 표적을 갱신하는 주기. 고속 표적(미사일 등)을 추적하려면 높은 데이터율이 필요하다.", author:"— 추적 기술"},
+  {text:"🎯 표적 할당(Target Assignment): 다수의 위협이 동시에 접근할 때, 어느 교전 체계가 어떤 표적을 담당할지 결정하는 전술적 과정이다.", author:"— 방공 전술"},
+  {text:"🎯 조기 경보(Early Warning): 위협이 교전 구역에 진입하기 전에 탐지해 대응 시간을 최대화하는 것. 장거리 탐색 레이다·조기경보기(AEW)가 핵심 자산이다.", author:"— 방공 전술"},
+  {text:"🎯 위협 우선순위(Threat Prioritization): 다수의 표적 중 가장 위협적인 것부터 교전하도록 순위를 매기는 과정. 비행 경로·속도·고도·표적 유형이 기준이 된다.", author:"— 방공 전술"},
+  {text:"🎯 데이터 링크(Data Link): 탐지 정보를 화기통제체계·미사일·지휘소 간에 실시간으로 공유하는 통신 체계. 네트워크 중심전(NCW)의 핵심이다.", author:"— C4I 기초"},
+  {text:"🎯 피아식별(IFF, Identification Friend or Foe): 레이다에 탐지된 표적이 아군인지 적군인지를 구별하는 체계. 오인 교전 방지를 위해 필수적이다.", author:"— 피아식별 기초"},
+  {text:"🎯 CEC(Cooperative Engagement Capability): 다수의 함정·부대가 레이다 정보를 실시간 공유해 단일 화기통제망처럼 운용하는 체계. 대함 미사일 방어에 효과적이다.", author:"— 방공 체계"},
+  {text:"🎯 TBMD(Theater Ballistic Missile Defense): 전구 탄도미사일 방어. 탄도미사일의 부스트·중간·종말 단계를 각각 다른 체계로 요격하는 다층 방어 개념이다.", author:"— 미사일 방어"},
+  {text:"🎯 종말 단계 요격(Terminal Phase Intercept): 탄도미사일이 재진입해 목표를 향해 낙하하는 마지막 단계에서 요격하는 방식. PAC-3, THAAD가 대표적이다.", author:"— 미사일 방어"},
+  {text:"🎯 레이다 음영(Radar Shadow): 지형지물이나 지구 곡률로 인해 레이다 빔이 도달하지 못하는 구역. 저고도 침투 항공기·미사일이 이 구역을 활용한다.", author:"— 레이다 운용"},
+  {text:"🎯 저고도 탐지(Low Altitude Detection): 지구 곡률과 지형 클러터로 인해 저고도 표적 탐지가 어렵다. 조기경보기·분산 레이다·IRST가 이를 보완한다.", author:"— 방공 전술"},
+  {text:"🎯 다중 센서 융합(Multi-Sensor Fusion): 레이다·적외선·광학·ESM 등 다양한 센서의 데이터를 통합해 표적 정보의 정확도와 신뢰도를 높이는 기술이다.", author:"— C4I 기술"},
+
+  // ── 미사일 유도 방식 (20개) ──
+  {text:"🚀 유도 방식은 크게 지령유도·반능동 레이다 유도·능동 레이다 유도·적외선 유도·관성유도로 구분된다.", author:"— 미사일 유도 기초"},
+  {text:"🚀 지령유도(Command Guidance): 지상의 화기통제체계가 미사일 비행 경로를 실시간으로 계산해 무선 명령으로 유도하는 방식이다.", author:"— 미사일 유도"},
+  {text:"🚀 반능동 레이다 유도(SARH): 지상 레이다가 표적을 조사(illumination)하면 미사일이 반사되는 신호를 추적한다. 나이키·호크 계열이 대표적이다.", author:"— 미사일 유도"},
+  {text:"🚀 능동 레이다 유도(ARH): 미사일 자체에 능동 레이다 탐색기를 탑재해 독립적으로 표적을 추적한다. 발사 후 망각(Fire & Forget)이 가능하다.", author:"— 미사일 유도"},
+  {text:"🚀 적외선 유도(IR Homing): 표적이 방출하는 적외선(열)을 탐색기가 추적하는 방식. 피동형이라 전파 방해에 강하지만 기상·플레어에 취약하다.", author:"— 미사일 유도"},
+  {text:"🚀 비례항법(PN: Proportional Navigation): 미사일이 표적을 향한 시선(LOS) 각속도에 비례해 가속도를 발생시키는 유도 법칙. 대부분의 현대 지대공 미사일에 적용된다.", author:"— 미사일 유도법칙"},
+  {text:"🚀 증강 비례항법(APN): 비례항법에 표적 기동 가속도를 보상하는 항을 추가한 방식. 기동 표적에 대한 탈락거리(Miss Distance)를 줄인다.", author:"— 미사일 유도법칙"},
+  {text:"🚀 복합 유도(Composite Guidance): 초기·중간·종말 단계별로 다른 유도 방식을 결합하는 기술. 장거리 미사일에서 INS+데이터링크+ARH 복합 유도가 많이 쓰인다.", author:"— 미사일 유도"},
+  {text:"🚀 관성항법(INS: Inertial Navigation System): 가속도계·자이로를 이용해 발사 이후 외부 신호 없이 자체적으로 위치를 계산하는 방식. GPS 재밍 환경에서도 운용 가능하다.", author:"— 미사일 유도"},
+  {text:"🚀 직격 요격(Hit-to-Kill, HTK): 탄두 폭발 없이 미사일 자체가 표적에 직접 충돌해 파괴하는 방식. 탄도미사일 방어에서 PAC-3·SM-3·THAAD가 이 방식을 사용한다.", author:"— 요격 기술"},
+  {text:"🚀 근접신관(Proximity Fuze): 표적 근방에서 자동으로 폭발하는 신관. 직격이 어려운 경우에도 파편으로 표적을 파괴할 수 있다.", author:"— 미사일 기초"},
+  {text:"🚀 지령유도-관성 복합(CI): 초기에 지령유도로 표적 방향으로 유도한 뒤, 종말 단계에 탐색기가 표적을 자체 추적하는 방식이다.", author:"— 미사일 유도"},
+  {text:"🚀 DIRCM(Directed Infrared Countermeasure): 레이저빔을 적 적외선 유도 미사일의 탐색기에 조사해 기만하는 방어 장비다.", author:"— 대응책"},
+  {text:"🚀 채프(Chaff)와 플레어(Flare): 채프는 알루미늄 조각으로 레이다를 기만하고, 플레어는 고온 열원으로 IR 미사일을 기만하는 방어 수단이다.", author:"— 대응책"},
+  {text:"🚀 탈락거리(Miss Distance): 미사일이 표적에 가장 가까이 접근한 거리. 직격 요격 체계는 Miss Distance를 수 cm 이하로 줄이는 것이 목표다.", author:"— 미사일 성능"},
+  {text:"🚀 종말 기동(Terminal Maneuver): 탄도미사일이 종말 단계에서 기동해 요격 미사일을 회피하려는 기술. 이를 상대하기 위해 반응 시간이 짧은 고속 요격체가 필요하다.", author:"— 미사일 기술"},
+  {text:"🚀 냉발사(Cold Launch): 발사관 내 가스 압력으로 미사일을 수m 공중으로 방출한 뒤 주 엔진이 점화되는 방식. 발사관과 차량을 화염 손상으로부터 보호한다.", author:"— 발사 방식"},
+  {text:"🚀 열발사(Hot Launch): 발사관 내에서 주 엔진이 점화되어 미사일이 직접 발사되는 방식. 단순하지만 발사관 내 열·압력 관리가 중요하다.", author:"— 발사 방식"},
+  {text:"🚀 VLS(Vertical Launch System, 수직발사체계): 미사일을 수직 방향으로 발사해 전방위 대응이 가능한 발사체계. 함정용으로 개발됐으나 지상 체계에도 적용된다.", author:"— 발사체계"},
+  {text:"🚀 사통(Fire Control): 탐지·추적·유도·발사를 통합 제어하는 체계. 표적 정보를 처리하고 미사일에 유도 명령을 전달하는 두뇌 역할을 한다.", author:"— 화기통제 기초"},
+
+  // ── 지대공 미사일 발사체계 (20개) ──
+  {text:"🛡️ 지대공 미사일(SAM: Surface-to-Air Missile)은 지상에서 발사해 공중 표적(항공기·미사일·드론)을 요격하는 무기체계다.", author:"— 방공 기초"},
+  {text:"🛡️ SAM 체계의 구성: 탐색 레이다 → 추적/사통 레이다 → 화기통제체계(FCS) → 발사대(Launcher) → 미사일의 순서로 교전이 이루어진다.", author:"— SAM 체계"},
+  {text:"🛡️ 교전 순서(Engagement Sequence): ①위협 탐지 ②표적 식별·우선순위 ③추적 레이다 지정 ④미사일 준비 ⑤발사 ⑥유도 ⑦요격 확인의 순으로 진행된다.", author:"— 교전 절차"},
+  {text:"🛡️ 발사 전 냉각(Cooling): 적외선 탐색기를 장착한 미사일은 발사 전 탐색기를 극저온으로 냉각해야 감도가 높아진다. 냉각 시간이 교전 반응 시간에 영향을 준다.", author:"— SAM 운용"},
+  {text:"🛡️ 자체 방어(Self-Defense) vs 지역 방어(Area Defense): 자체 방어 SAM은 발사 차량 보호 목적, 지역 방어 SAM은 넓은 지역을 방어하는 목적으로 사용된다.", author:"— 방공 개념"},
+  {text:"🛡️ SHORAD(Short-Range Air Defense): 단거리 방공체계. 저고도·저속 위협(드론·헬기·순항미사일)에 대응하며 기동부대와 함께 움직인다.", author:"— 방공 분류"},
+  {text:"🛡️ MANPADS(Man-Portable Air Defense System): 1인이 운용하는 휴대형 지대공 미사일. 스팅어·이글라 등이 대표적이며, 최전방 부대 저고도 방공에 활용된다.", author:"— 방공 분류"},
+  {text:"🛡️ 다층 방어(Layered Defense): 원거리 장거리 SAM, 중거리 SAM, 단거리 SAM, CIWS를 계층적으로 배치해 요격 실패 시 다음 체계가 대응하는 방공 전략이다.", author:"— 방공 전략"},
+  {text:"🛡️ 패트리엇(Patriot) PAC-3: 미국의 대표적 지대공 미사일. 항공기·순항미사일·탄도미사일을 요격할 수 있으며, PAC-3 MSE는 직격 요격(HTK) 방식이다.", author:"— SAM 체계"},
+  {text:"🛡️ THAAD(Terminal High Altitude Area Defense): 고고도 종말단계 방어 체계. 탄도미사일이 대기권에 재진입하는 단계에서 직격 요격한다. 사드 레이다(AN/TPY-2)는 X밴드 고성능 레이다다.", author:"— SAM 체계"},
+  {text:"🛡️ 천궁(M-SAM): 한국 독자 개발 중거리 지대공 미사일. 능동 레이다 유도 방식으로 항공기·순항미사일을 요격한다. 천궁-II는 탄도미사일 방어 능력도 갖췄다.", author:"— 한국 방공체계"},
+  {text:"🛡️ 천마: 한국군의 자주 단거리 방공체계. 장갑 차체에 탑재되어 기동부대를 저고도 위협으로부터 방호한다.", author:"— 한국 방공체계"},
+  {text:"🛡️ S-400(러시아): 최대 탐지 거리 600km, 동시 교전 80개 표적. 다중 레이다와 복수 미사일 유형을 결합한 장거리 방공체계다.", author:"— SAM 체계"},
+  {text:"🛡️ SM-6(Standard Missile-6): 미 해군 함대공 미사일. 능동 레이다 유도 방식으로 대공·탄도미사일·수상 표적까지 요격 가능한 다목적 미사일이다.", author:"— SAM 체계"},
+  {text:"🛡️ 발사대 배치(Launcher Deployment): SAM 발사대는 360도 전방위 대응을 위해 배치 각도와 간격이 중요하다. 발사대 간격이 넓을수록 방어 면적이 넓어지지만 상호 지원이 어렵다.", author:"— SAM 운용"},
+  {text:"🛡️ 재장전(Reload): 전투 중 발사대의 미사일이 소진되면 신속히 재장전해야 한다. 재장전 소요 시간은 방공 지속성의 핵심 변수다.", author:"— SAM 운용"},
+  {text:"🛡️ 사계(Field of Fire): 발사대가 미사일을 발사할 수 있는 방위각·고도각 범위. 지형 장애물·아군 항공로와의 충돌 방지를 위해 사계 분석이 필수다.", author:"— SAM 운용"},
+  {text:"🛡️ 최소 교전 고도(Minimum Engagement Altitude): 미사일 체계가 표적을 요격할 수 있는 최저 고도. 이 고도 이하로 비행하는 드론·헬기는 별도 무기체계로 대응해야 한다.", author:"— SAM 성능"},
+  {text:"🛡️ 킬 체인(Kill Chain): 표적 탐지→식별→추적→교전결심→발사→요격의 전 과정을 연결하는 일련의 절차. Kill Chain 단축이 대응 시간을 줄이는 핵심이다.", author:"— 방공 개념"},
+  {text:"🛡️ C2(Command & Control, 지휘통제): 다수의 SAM 포대를 통합 운용하기 위한 지휘통제체계. 위협 정보를 공유하고 교전 임무를 배분해 방공망의 효율을 극대화한다.", author:"— 방공 C2"},
+
+  // ── 전술·작전 개념 (20개) ──
+  {text:"⚔️ 방공 임무의 핵심은 시간이다. 적 공중 위협에 대한 탐지→교전결심→발사의 킬체인을 최대한 단축하는 것이 방공 전술의 핵심이다.", author:"— 방공 전술"},
+  {text:"⚔️ 종심 방어(Defense in Depth): 방어선을 전방에서 후방까지 중첩 배치해 단일 방어선 돌파 시에도 후속 방어가 가능하도록 하는 전략이다.", author:"— 방공 전략"},
+  {text:"⚔️ 포화 공격(Saturation Attack): 다수의 미사일·드론을 동시에 발사해 방공망의 처리 능력을 초과하게 만드는 공격 전술. 이에 대응하기 위해 다층 방어와 고속 교전이 필요하다.", author:"— 방공 위협"},
+  {text:"⚔️ 저피탐(Stealth) 위협: RCS를 최소화한 스텔스 항공기·미사일은 레이다 탐지 거리가 크게 줄어들어 대응 시간이 짧아진다. 다중 레이다 융합과 저주파 레이다가 대응 수단이다.", author:"— 방공 위협"},
+  {text:"⚔️ 드론(UAS) 위협: 소형·저가·다수의 드론은 기존 SAM으로 대응하기 비경제적이다. 고출력 레이저·전자전·근거리 화기를 복합 운용하는 대드론 체계가 필요하다.", author:"— 방공 위협"},
+  {text:"⚔️ 순항미사일(Cruise Missile) 위협: 저고도·지형 추적 비행으로 레이다 탐지를 어렵게 한다. SHORAD와 레이다 음영 보완을 위한 고정익 AEW가 핵심 대응 자산이다.", author:"— 방공 위협"},
+  {text:"⚔️ 탄도미사일(Ballistic Missile) 위협: 고속·고고도·재진입 특성으로 요격이 매우 어렵다. 부스트 단계·중간 단계·종말 단계 별로 다른 요격 체계가 필요하다.", author:"— 방공 위협"},
+  {text:"⚔️ 진지 선정(Position Selection): SAM 진지는 레이다 시계·발사 사계·위장 가능성·기동로·아군 항공로를 고려해 선정해야 한다.", author:"— SAM 운용"},
+  {text:"⚔️ 양동 작전(Deception Operation): 가짜 발사대·열 발생 장치 등으로 적의 반레이다 미사일(ARM)을 기만하는 전술. 진짜 체계를 보호하는 핵심 생존 기법이다.", author:"— 방공 전술"},
+  {text:"⚔️ 전자전(EW) 환경에서의 운용: 재밍·기만 신호로 레이다가 교란될 때는 수동(패시브) 센서·광전자 체계로 전환하거나 주파수를 변경해 운용해야 한다.", author:"— 방공 전술"},
+  {text:"⚔️ 방공 협조선(ADCL): 아군 항공기 운용 공역과 SAM 교전 구역 간 충돌을 방지하기 위해 설정하는 가상의 경계선이다.", author:"— 방공 협조"},
+  {text:"⚔️ 무기통제규칙(ROE, Rules of Engagement): 교전 허가 범위를 규정하는 명령. 방공에서는 자동 교전·반자동 교전·수동 교전 모드가 있으며 상황에 따라 전환한다.", author:"— 방공 규칙"},
+  {text:"⚔️ 피아식별 오류(IFF Failure)는 방공 작전에서 가장 심각한 위험이다. 아군기 오격을 방지하기 위해 복수의 IFF 수단과 교전 절차 확인이 필수적이다.", author:"— 방공 안전"},
+  {text:"⚔️ 방공 자산 우선 파괴(DEAD: Destruction of Enemy Air Defense): 적이 방공망을 무력화하기 위해 SAM·레이다를 최우선 공격하는 전술. 이에 대한 대응으로 진지 변환·위장이 중요하다.", author:"— 방공 생존"},
+  {text:"⚔️ 생존성(Survivability): SAM 체계가 적의 공격에서 살아남을 수 있는 능력. 신속한 진지 변환, 위장, 분산 배치, 방호 차량화가 생존성을 높인다.", author:"— SAM 생존"},
+  {text:"⚔️ 포대 협동(Battery Cooperation): 인접 SAM 포대 간 레이다 정보·표적 정보를 공유해 음영 구역을 보완하고 방어 효율을 높이는 운용 방식이다.", author:"— SAM 운용"},
+  {text:"⚔️ 고정 방어(Fixed Defense) vs 기동 방어(Mobile Defense): 고정 방어는 방호 효과가 크나 기습에 취약하고, 기동 방어는 유연하나 방호 지속성이 낮다. 두 방식의 통합 운용이 최적이다.", author:"— 방공 전략"},
+  {text:"⚔️ 방공 경보 체계: 항공기·미사일 탐지 시 경보를 신속히 전파해 피엄호 부대가 대피하고 SAM 포대가 교전 준비를 갖출 시간을 확보한다.", author:"— 방공 운용"},
+  {text:"⚔️ NCW(Network Centric Warfare, 네트워크 중심전): 다수의 센서·화기를 네트워크로 연결해 전장 인식을 공유하고 분산된 화력을 통합 운용하는 현대 전쟁 개념이다.", author:"— 현대 방공"},
+  {text:"⚔️ 특수근무 장병은 방공 임무의 최전선에 있다. 경계와 집중은 언제나 최우선이다. 오늘도 수고가 많습니다! 🎖️", author:"— 빵포 스케줄러"},
+];;
+
+function showQuote() {
+  const qCard   = document.getElementById('quote-card');
+  const textEl  = document.getElementById('quote-text');
+  const authEl  = document.getElementById('quote-author');
+  const milText = document.getElementById('quote-mil-text');
+  const milAuth = document.getElementById('quote-mil-author');
+  if (!qCard || !textEl || !authEl || !milText || !milAuth) return;
+
+  // 명언 (위인) — 랜덤 선택
+  const qIdx = (Math.floor(Date.now() / 60000) + Math.floor(Math.random() * QUOTES.length)) % QUOTES.length;
+  const q = QUOTES[qIdx];
+  textEl.style.fontStyle = 'italic';
+  textEl.style.fontSize  = '13px';
+  textEl.textContent = '" ' + q.text + ' "';
+  authEl.textContent = q.author;
+
+  // 군사·방공 지식 — 별도 랜덤 선택
+  const mIdx = (Math.floor(Date.now() / 30000) + Math.floor(Math.random() * MIL_KNOWLEDGE.length)) % MIL_KNOWLEDGE.length;
+  const m = MIL_KNOWLEDGE[mIdx];
+  milText.textContent = m.text;
+  milAuth.textContent = m.author;
+}
+
+// ============================================================
+// 날씨 — 지역 데이터 (도/시군구/읍면동 + 위경도)
+// ============================================================
+let weatherRegion   = null; // {name, lat, lon}
+let weatherCache    = {};   // {'YYYY-MM-DD': weatherData}
+let _weatherFetching = false;  // 중복 fetch 방지
+let _weatherLastFetch = 0;     // 마지막 fetch 시각 (ms)
+let _weatherFetchFailed = false; // 오류 후 재시도 방지
+const WEATHER_FETCH_COOLDOWN = 60000; // 1분 쿨다운
+
+// 주요 지역 데이터 (도 > 시군구 > 읍면동 + 위경도)
+const REGION_DATA = {
+  "서울특별시":{"강남구":{"_":{"역삼동":[37.5009,127.0363],"삼성동":[37.5140,127.0572],"논현동":[37.5114,127.0220],"신사동":[37.5239,127.0223]}},"강동구":{"_":{"천호동":[37.5387,127.1238],"암사동":[37.5518,127.1316],"성내동":[37.5418,127.1390]}},"강북구":{"_":{"번동":[37.6369,127.0215],"수유동":[37.6450,127.0208],"우이동":[37.6596,127.0139]}},"강서구":{"_":{"화곡동":[37.5469,126.8490],"방화동":[37.5688,126.8023],"마곡동":[37.5596,126.8348]}},"관악구":{"_":{"봉천동":[37.4783,126.9516],"신림동":[37.4849,126.9295],"남현동":[37.4726,126.9623]}},"광진구":{"_":{"구의동":[37.5384,127.0847],"자양동":[37.5328,127.0747],"화양동":[37.5478,127.0712]}},"구로구":{"_":{"구로동":[37.4954,126.8876],"고척동":[37.5044,126.8697],"개봉동":[37.4975,126.8627]}},"금천구":{"_":{"가산동":[37.4793,126.8837],"시흥동":[37.4577,126.9002],"독산동":[37.4766,126.9017]}},"노원구":{"_":{"상계동":[37.6558,127.0673],"중계동":[37.6375,127.0712],"월계동":[37.6224,127.0557]}},"도봉구":{"_":{"창동":[37.6531,127.0474],"방학동":[37.6663,127.0417],"도봉동":[37.6803,127.0450]}},"동대문구":{"_":{"전농동":[37.5826,127.0565],"회기동":[37.5930,127.0560],"청량리동":[37.5799,127.0502]}},"동작구":{"_":{"노량진동":[37.5124,126.9393],"사당동":[37.4769,126.9817],"상도동":[37.4986,126.9418]}},"마포구":{"_":{"합정동":[37.5499,126.9140],"상수동":[37.5479,126.9217],"망원동":[37.5565,126.9066],"공덕동":[37.5454,126.9514]}},"서대문구":{"_":{"신촌동":[37.5550,126.9368],"홍은동":[37.5920,126.9345],"북가좌동":[37.5790,126.9156]}},"서초구":{"_":{"서초동":[37.4837,127.0324],"반포동":[37.5040,127.0053],"방배동":[37.4812,126.9993]}},"성동구":{"_":{"왕십리동":[37.5614,127.0370],"행당동":[37.5573,127.0340],"금호동":[37.5488,127.0196]}},"성북구":{"_":{"길음동":[37.5996,127.0192],"돈암동":[37.5939,127.0154],"하월곡동":[37.6069,127.0238]}},"송파구":{"_":{"잠실동":[37.5131,127.1000],"방이동":[37.5112,127.1157],"문정동":[37.4836,127.1216],"가락동":[37.4936,127.1166]}},"양천구":{"_":{"목동":[37.5260,126.8747],"신정동":[37.5220,126.8790],"신월동":[37.5319,126.8555]}},"영등포구":{"_":{"여의도동":[37.5219,126.9245],"당산동":[37.5336,126.8972],"대림동":[37.4899,126.8948]}},"용산구":{"_":{"이태원동":[37.5345,126.9942],"한남동":[37.5340,127.0017],"효창동":[37.5436,126.9641]}},"은평구":{"_":{"응암동":[37.6095,126.9264],"녹번동":[37.6069,126.9291],"불광동":[37.6104,126.9326]}},"종로구":{"_":{"경복궁동":[37.5836,126.9770],"청운효자동":[37.5878,126.9692],"사직동":[37.5765,126.9688]}},"중구":{"_":{"명동":[37.5636,126.9869],"신당동":[37.5610,127.0146],"을지로동":[37.5660,126.9830]}},"중랑구":{"_":{"면목동":[37.5875,127.0849],"망우동":[37.5935,127.1065],"신내동":[37.6073,127.1036]}}},
+  "부산광역시":{"강서구":{"_":{"명지동":[35.0820,128.9468],"가락동":[35.1210,128.9540],"대저동":[35.1930,128.9840]}},"금정구":{"_":{"부곡동":[35.2374,129.0838],"구서동":[35.2268,129.0787],"장전동":[35.2296,129.0888]}},"기장군":{"_":{"기장읍":[35.2447,129.2226],"정관읍":[35.3060,129.1847],"일광읍":[35.2688,129.2460]}},"남구":{"_":{"대연동":[35.1349,129.0862],"문현동":[35.1418,129.0622],"용호동":[35.1169,129.1011]}},"동구":{"_":{"범일동":[35.1272,129.0531],"좌천동":[35.1329,129.0466],"수정동":[35.1385,129.0464]}},"동래구":{"_":{"온천동":[35.2032,129.0815],"안락동":[35.1950,129.0985],"명륜동":[35.1961,129.0803]}},"부산진구":{"_":{"전포동":[35.1566,129.0595],"부전동":[35.1628,129.0574],"범천동":[35.1440,129.0619]}},"북구":{"_":{"구포동":[35.2071,128.9936],"만덕동":[35.2199,129.0227],"화명동":[35.2379,129.0156]}},"사상구":{"_":{"모라동":[35.1580,128.9834],"삼락동":[35.1740,128.9640],"덕포동":[35.1736,128.9918]}},"사하구":{"_":{"당리동":[35.0988,128.9749],"괴정동":[35.1030,128.9867],"다대동":[35.0634,128.9597]}},"서구":{"_":{"아미동":[35.1018,129.0177],"초장동":[35.0989,129.0086],"암남동":[35.0838,129.0065]}},"수영구":{"_":{"수영동":[35.1464,129.1133],"망미동":[35.1576,129.1030],"민락동":[35.1538,129.1284]}},"연제구":{"_":{"연산동":[35.1760,129.0810],"거제동":[35.1850,129.0700],"연산동":[35.1815,129.0785]}},"영도구":{"_":{"영선동":[35.0882,129.0692],"청학동":[35.0780,129.0744],"동삼동":[35.0620,129.0857]}},"중구":{"_":{"중앙동":[35.1030,129.0326],"남포동":[35.0975,129.0265],"광복동":[35.0993,129.0267]}},"해운대구":{"_":{"우동":[35.1631,129.1635],"좌동":[35.1745,129.1810],"송정동":[35.1793,129.2005],"재송동":[35.1900,129.1480]}}},
+  "대구광역시":{"달서구":{"_":{"두류동":[35.8558,128.5646],"성당동":[35.8499,128.5519],"용산동":[35.8296,128.5433]}},"달성군":{"_":{"화원읍":[35.8122,128.5036],"옥포읍":[35.7869,128.4848],"논공읍":[35.7490,128.4323]}},"동구":{"_":{"신천동":[35.8825,128.6282],"효목동":[35.8741,128.6302],"방촌동":[35.9121,128.6501]}},"북구":{"_":{"칠성동":[35.8923,128.5928],"산격동":[35.9047,128.6099],"읍내동":[35.9300,128.5746]}},"서구":{"_":{"비산동":[35.8789,128.5605],"내당동":[35.8668,128.5695],"평리동":[35.8702,128.5487]}},"남구":{"_":{"대명동":[35.8494,128.5839],"봉덕동":[35.8544,128.5945]}},"수성구":{"_":{"범어동":[35.8589,128.6300],"황금동":[35.8493,128.6257],"만촌동":[35.8542,128.6489]}},"중구":{"_":{"동인동":[35.8708,128.5985],"삼덕동":[35.8659,128.5959],"대봉동":[35.8579,128.5979]}}},
+  "인천광역시":{"강화군":{"_":{"강화읍":[37.7473,126.4875],"교동면":[37.7860,126.2965],"삼산면":[37.7610,126.5175]}},"계양구":{"_":{"계산동":[37.5371,126.7378],"작전동":[37.5289,126.7202],"박촌동":[37.5571,126.7193]}},"남동구":{"_":{"구월동":[37.4490,126.7321],"간석동":[37.4651,126.7149],"논현동":[37.4212,126.7357]}},"동구":{"_":{"송림동":[37.4820,126.6513],"화수동":[37.4853,126.6440]}},"미추홀구":{"_":{"주안동":[37.4557,126.6896],"학익동":[37.4440,126.6774],"용현동":[37.4519,126.6708]}},"부평구":{"_":{"부평동":[37.4888,126.7224],"십정동":[37.4962,126.7346],"산곡동":[37.5015,126.7220]}},"서구":{"_":{"검단동":[37.5766,126.6786],"청라동":[37.5353,126.6449],"가좌동":[37.5060,126.6762]}},"연수구":{"_":{"송도동":[37.3836,126.6561],"옥련동":[37.4034,126.6779],"연수동":[37.4146,126.6857]}},"옹진군":{"_":{"북도면":[37.5360,126.3540],"덕적면":[37.2238,126.1490]}},"중구":{"_":{"중앙동":[37.4748,126.6163],"신포동":[37.4774,126.6197],"운서동":[37.4768,126.4866]}}},
+  "광주광역시":{"광산구":{"_":{"수완동":[35.1780,126.8030],"첨단동":[35.2193,126.8430],"하남동":[35.1567,126.7900]}},"남구":{"_":{"봉선동":[35.1298,126.9098],"월산동":[35.1418,126.8943],"주월동":[35.1221,126.9076]}},"동구":{"_":{"충장동":[35.1468,126.9218],"서석동":[35.1421,126.9266],"학동":[35.1310,126.9340]}},"북구":{"_":{"용봉동":[35.1741,126.9108],"문흥동":[35.1906,126.9231],"신안동":[35.1583,126.9037]}},"서구":{"_":{"치평동":[35.1536,126.8509],"마륵동":[35.1469,126.8472],"화정동":[35.1508,126.8731]}}},
+  "대전광역시":{"대덕구":{"_":{"오정동":[36.3701,127.4257],"법동":[36.3836,127.4135],"중리동":[36.3616,127.4369]}},"동구":{"_":{"용운동":[36.3298,127.4498],"삼성동":[36.3452,127.4390],"가양동":[36.3532,127.4504]}},"서구":{"_":{"둔산동":[36.3504,127.3845],"탄방동":[36.3378,127.3731],"갈마동":[36.3454,127.3612]}},"유성구":{"_":{"봉명동":[36.3619,127.3440],"도안동":[36.3487,127.3119],"구즉동":[36.3963,127.2854]}},"중구":{"_":{"은행동":[36.3253,127.4242],"대흥동":[36.3267,127.4230],"목동":[36.3140,127.4200]}}},
+  "울산광역시":{"남구":{"_":{"삼산동":[35.5422,129.3316],"달동":[35.5402,129.3195],"무거동":[35.5293,129.2921]}},"동구":{"_":{"방어동":[35.5070,129.4207],"전하동":[35.5156,129.3936],"화정동":[35.5306,129.3821]}},"북구":{"_":{"화봉동":[35.5916,129.3601],"매곡동":[35.6045,129.3581],"신천동":[35.6228,129.3623]}},"울주군":{"_":{"언양읍":[35.5644,129.1845],"온양읍":[35.4345,129.2140],"범서읍":[35.5534,129.2561]}},"중구":{"_":{"학성동":[35.5697,129.3300],"반구동":[35.5687,129.3452],"성남동":[35.5597,129.3228]}}},
+  "세종특별자치시":{"세종시":{"_":{"어진동":[36.4800,127.2890],"보람동":[36.4921,127.2824],"새롬동":[36.4861,127.2638],"도담동":[36.5015,127.2811],"아름동":[36.4694,127.2547],"종촌동":[36.4822,127.2503],"고운동":[36.4758,127.2455]}}},
+  "경기도":{"가평군":{"_":{"가평읍":[37.8310,127.5107],"청평면":[37.7308,127.4878],"조종면":[37.8795,127.4612]}},"고양시":{"덕양구":{"행신동":[37.6258,126.8317],"화정동":[37.6398,126.8325],"능곡동":[37.6380,126.8214]},"일산동구":{"마두동":[37.6602,126.7728],"백석동":[37.6612,126.7899],"식사동":[37.6736,126.7998]},"일산서구":{"주엽동":[37.6757,126.7540],"대화동":[37.6814,126.7390],"탄현동":[37.6590,126.7183]}},"광명시":{"_":{"광명동":[37.4784,126.8648],"철산동":[37.4726,126.8660],"하안동":[37.4557,126.8731]}},"광주시":{"_":{"경안동":[37.4296,127.2560],"오포읍":[37.3877,127.2401],"초월읍":[37.3756,127.3204]}},"구리시":{"_":{"인창동":[37.5929,127.1350],"교문동":[37.5893,127.1254],"수택동":[37.5948,127.1516]}},"군포시":{"_":{"산본동":[37.3612,126.9358],"부곡동":[37.3683,126.9476],"당정동":[37.3592,126.9461]}},"김포시":{"_":{"사우동":[37.6154,126.7162],"고촌읍":[37.5979,126.7358],"통진읍":[37.6612,126.6220],"양촌읍":[37.5753,126.6531]}},"남양주시":{"_":{"금곡동":[37.6472,127.1660],"화도읍":[37.6427,127.3041],"별내동":[37.6597,127.1349],"다산동":[37.6144,127.2034]}},"동두천시":{"_":{"지행동":[37.9037,127.0606],"생연동":[37.9015,127.0537]}},"부천시":{"소사구":{"소사본동":[37.4835,126.7936],"범박동":[37.4750,126.7806],"괴안동":[37.4803,126.7856]},"오정구":{"오정동":[37.5040,126.7697],"고강동":[37.5130,126.7560],"작동":[37.5086,126.7450]},"원미구":{"중동":[37.5031,126.7663],"상동":[37.5106,126.7758],"심곡동":[37.4993,126.7803]}},"성남시":{"분당구":{"서현동":[37.3833,127.1218],"야탑동":[37.4116,127.1274],"판교동":[37.3939,127.1094],"정자동":[37.3671,127.1072]},"수정구":{"신흥동":[37.4447,127.1488],"태평동":[37.4394,127.1419],"수진동":[37.4356,127.1382]},"중원구":{"금광동":[37.4326,127.1572],"상대원동":[37.4226,127.1659],"여수동":[37.4195,127.1491]}},"수원시":{"권선구":{"권선동":[37.2556,127.0126],"세류동":[37.2700,127.0221],"금곡동":[37.2439,126.9795]},"장안구":{"조원동":[37.3041,127.0133],"파장동":[37.3232,126.9941],"정자동":[37.2990,127.0282]},"팔달구":{"인계동":[37.2636,127.0286],"우만동":[37.2767,127.0409],"화서동":[37.2812,127.0105]},"영통구":{"매탄동":[37.2586,127.0554],"망포동":[37.2485,127.0650],"영통동":[37.2516,127.0576]}},"시흥시":{"_":{"정왕동":[37.3472,126.7300],"배곧동":[37.3625,126.7272],"신천동":[37.3799,126.8038]}},"안산시":{"단원구":{"고잔동":[37.3151,126.8186],"초지동":[37.3070,126.8227],"원곡동":[37.3192,126.8007]},"상록구":{"본오동":[37.3218,126.8317],"사동":[37.3152,126.8465],"이동":[37.3434,126.8415]}},"안성시":{"_":{"안성동":[37.0077,127.2726],"공도읍":[37.0526,127.2569],"미양면":[36.9816,127.2093]}},"안양시":{"동안구":{"평촌동":[37.3937,126.9528],"호계동":[37.4046,126.9617],"비산동":[37.3999,126.9407]},"만안구":{"안양동":[37.3944,126.9267],"박달동":[37.3842,126.9049],"석수동":[37.3882,126.9199]}},"양주시":{"_":{"옥정동":[37.7860,127.0610],"회천동":[37.7975,127.0435],"은현면":[37.8456,127.0207]}},"양평군":{"_":{"양평읍":[37.4913,127.4897],"용문면":[37.5490,127.5543],"지평면":[37.4754,127.6476]}},"여주시":{"_":{"여주동":[37.2993,127.6373],"점동면":[37.2654,127.7157],"가남읍":[37.1956,127.5989]}},"연천군":{"_":{"연천읍":[38.0969,127.0740],"전곡읍":[38.0036,127.0599],"청산면":[38.0751,127.1836]}},"오산시":{"_":{"오산동":[37.1521,127.0762],"세마동":[37.1782,127.0690],"원동":[37.1502,127.0822]}},"용인시":{"기흥구":{"영덕동":[37.2788,127.1147],"구성동":[37.2999,127.1062],"신갈동":[37.2784,127.1025]},"수지구":{"풍덕천동":[37.3236,127.0965],"죽전동":[37.3374,127.1085],"동천동":[37.3478,127.1063]},"처인구":{"김량장동":[37.2338,127.2024],"포곡읍":[37.2827,127.2327],"모현읍":[37.3223,127.1999]}},"의왕시":{"_":{"내손동":[37.3447,126.9686],"오전동":[37.3527,126.9758],"청계동":[37.3613,126.9850]}},"의정부시":{"_":{"의정부동":[37.7381,127.0337],"민락동":[37.7499,127.0700],"호원동":[37.7260,127.0618]}},"이천시":{"_":{"중리동":[37.2720,127.4427],"부발읍":[37.2355,127.4913],"마장면":[37.2533,127.4200]}},"파주시":{"_":{"금촌동":[37.7691,126.7806],"운정동":[37.7166,126.7273],"문산읍":[37.8575,126.7888],"조리읍":[37.7431,126.8124]}},"평택시":{"_":{"평택동":[36.9921,127.1127],"비전동":[37.0011,127.0875],"안중읍":[36.9836,126.8474],"팽성읍":[36.9637,127.0812],"포승읍":[36.9896,126.8069]}},"포천시":{"_":{"군내면":[38.0940,127.1991],"소흘읍":[37.9474,127.1120],"포천동":[37.8953,127.1992]}},"하남시":{"_":{"풍산동":[37.5398,127.2076],"미사동":[37.5589,127.1881],"덕풍동":[37.5385,127.2040]}},"화성시":{"_":{"동탄동":[37.2005,127.0743],"병점동":[37.1980,127.0499],"향남읍":[37.0955,126.9681],"봉담읍":[37.2149,126.9670]}}},
+  "강원도":{"강릉시":{"_":{"교동":[37.7519,128.8761],"홍제동":[37.7623,128.8960],"포남동":[37.7546,128.9067],"주문진읍":[37.9029,128.8169]}},"고성군":{"_":{"간성읍":[38.3813,128.4645],"거진읍":[38.4654,128.4544]}},"동해시":{"_":{"천곡동":[37.5244,129.1143],"발한동":[37.5050,129.1223]}},"삼척시":{"_":{"성내동":[37.4496,129.1657],"교동":[37.4552,129.1680],"도계읍":[37.2928,129.0578]}},"속초시":{"_":{"교동":[38.2041,128.5915],"조양동":[38.1951,128.6049],"청호동":[38.2102,128.5941]}},"양구군":{"_":{"양구읍":[38.1062,127.9894],"남면":[37.9855,127.9574]}},"양양군":{"_":{"양양읍":[38.0749,128.6189],"손양면":[37.9879,128.6620]}},"영월군":{"_":{"영월읍":[37.1836,128.4613],"상동읍":[37.0503,128.7110]}},"원주시":{"_":{"단구동":[37.3422,127.9201],"무실동":[37.3505,127.9503],"반곡동":[37.3208,127.9604],"문막읍":[37.3034,127.7859]}},"인제군":{"_":{"인제읍":[38.0693,128.1707],"기린면":[37.8872,128.3118]}},"정선군":{"_":{"정선읍":[37.3801,128.6598],"고한읍":[37.1814,128.9253]}},"철원군":{"_":{"철원읍":[38.1467,127.3135],"동송읍":[38.1080,127.3345],"김화읍":[38.2156,127.4744]}},"춘천시":{"_":{"약사동":[37.8728,127.7306],"온의동":[37.8878,127.7261],"신북읍":[37.9398,127.7309]}},"태백시":{"_":{"황지동":[37.1654,128.9862],"상장동":[37.1576,128.9906]}},"평창군":{"_":{"평창읍":[37.3710,128.3938],"대화면":[37.4819,128.4267],"봉평면":[37.5348,128.5080]}},"홍천군":{"_":{"홍천읍":[37.6969,127.8883],"화촌면":[37.6658,128.0041]}},"화천군":{"_":{"화천읍":[38.1065,127.7096],"상서면":[38.1657,127.7601]}},"횡성군":{"_":{"횡성읍":[37.4914,127.9850],"우천면":[37.4369,128.0555]}}},
+  "충청북도":{"괴산군":{"_":{"괴산읍":[36.8140,127.7873],"감물면":[36.9126,127.7490]}},"단양군":{"_":{"단양읍":[36.9849,128.3670],"매포읍":[36.9948,128.3230]}},"보은군":{"_":{"보은읍":[36.4895,127.7296],"속리산면":[36.5424,127.8196]}},"영동군":{"_":{"영동읍":[36.1745,127.7768],"황간면":[36.2436,127.8786]}},"옥천군":{"_":{"옥천읍":[36.3064,127.5709],"이원면":[36.2748,127.6527]}},"음성군":{"_":{"음성읍":[36.9369,127.6906],"금왕읍":[37.0060,127.5862],"맹동면":[36.9885,127.5319]}},"제천시":{"_":{"의림동":[37.1320,128.1900],"남현동":[37.1254,128.1970],"청전동":[37.1434,128.1996]}},"증평군":{"_":{"증평읍":[36.7850,127.5814]}},"진천군":{"_":{"진천읍":[36.8551,127.4359],"덕산읍":[36.9174,127.5053],"이월면":[36.8891,127.3852]}},"청주시":{"상당구":{"용암동":[36.6163,127.5096],"탑동":[36.6266,127.4948],"문의면":[36.5196,127.5069]},"서원구":{"모충동":[36.6363,127.4727],"수곡동":[36.6209,127.4571],"사직동":[36.6367,127.4812]},"청원구":{"내덕동":[36.6667,127.4811],"율량동":[36.6749,127.4885],"오창읍":[36.7308,127.4333]},"흥덕구":{"복대동":[36.6442,127.4489],"가경동":[36.6310,127.4354],"강내면":[36.5997,127.3636]}},"충주시":{"_":{"성내동":[36.9909,127.9258],"교현동":[36.9966,127.9390],"용탄동":[36.9849,127.9157],"앙성면":[37.0438,127.9792]}}},
+  "충청남도":{"계룡시":{"_":{"금암동":[36.2747,127.2489],"두마면":[36.3046,127.2454]}},"공주시":{"_":{"금학동":[36.4466,127.1202],"웅진동":[36.4549,127.1316],"정안면":[36.5316,127.1813],"유구읍":[36.5447,126.9864]}},"금산군":{"_":{"금산읍":[36.1087,127.4884],"추부면":[36.1733,127.4527]}},"논산시":{"_":{"취암동":[36.1869,127.0987],"연무읍":[36.1189,127.1017],"강경읍":[36.1539,126.9897]}},"당진시":{"_":{"당진동":[36.8934,126.6452],"합덕읍":[36.8300,126.7547],"송악읍":[36.8562,126.6166]}},"보령시":{"_":{"대천동":[36.3327,126.6126],"주교면":[36.3897,126.5895],"웅천읍":[36.3188,126.5488]}},"부여군":{"_":{"부여읍":[36.2757,126.9097],"홍산면":[36.2074,126.8969],"규암면":[36.3022,126.9081]}},"서산시":{"_":{"동문동":[36.7845,126.4503],"석남동":[36.7742,126.4481],"해미면":[36.7010,126.5607],"대산읍":[36.9020,126.3773]}},"서천군":{"_":{"장항읍":[36.0026,126.6877],"서천읍":[36.0772,126.6901],"한산면":[36.1546,126.8124]}},"아산시":{"_":{"모종동":[36.7896,127.0019],"온양동":[36.7899,127.0042],"배방읍":[36.8007,127.0592],"도고면":[36.7010,126.9329],"신창면":[36.8121,126.9248]}},"예산군":{"_":{"예산읍":[36.6804,126.8490],"삽교읍":[36.7462,126.7995],"덕산면":[36.6672,126.6938]}},"청양군":{"_":{"청양읍":[36.4594,126.8024],"정산면":[36.4058,126.8849]}},"천안시":{"동남구":{"신부동":[36.8065,127.1551],"쌍용동":[36.7970,127.1432],"청수동":[36.8157,127.1675],"목천읍":[36.7735,127.2093],"병천면":[36.8199,127.2843]},"서북구":{"불당동":[36.8347,127.1341],"성성동":[36.8223,127.1125],"두정동":[36.8502,127.1399],"성환읍":[36.9264,127.0855],"직산읍":[36.8988,127.1545],"입장면":[36.9628,127.2046],"성거읍":[36.9007,127.1283]}},"태안군":{"_":{"태안읍":[36.7451,126.2975],"안면읍":[36.5157,126.3748],"소원면":[36.8175,126.1897]}},"홍성군":{"_":{"홍성읍":[36.6013,126.6603],"광천읍":[36.5297,126.6220],"홍북읍":[36.6385,126.6577]}}},
+  "전라북도":{"고창군":{"_":{"고창읍":[35.4352,126.7015],"흥덕면":[35.4940,126.6584]}},"군산시":{"_":{"조촌동":[35.9674,126.7367],"나운동":[35.9614,126.7098],"옥산면":[35.9890,126.8060]}},"김제시":{"_":{"요촌동":[35.8035,126.8806],"금구면":[35.8262,127.0166],"만경읍":[35.8041,126.8160]}},"남원시":{"_":{"동충동":[35.4163,127.3899],"금지면":[35.4820,127.4240]}},"무주군":{"_":{"무주읍":[35.9070,127.6613]}},"부안군":{"_":{"부안읍":[35.7316,126.7337],"변산면":[35.6710,126.6187]}},"순창군":{"_":{"순창읍":[35.3742,127.1369]}},"완주군":{"_":{"삼례읍":[35.8972,127.0804],"봉동읍":[35.9166,127.0569],"용진읍":[35.9477,127.1204]}},"익산시":{"_":{"영등동":[35.9476,126.9578],"어양동":[35.9415,126.9811],"모현동":[35.9355,126.9719],"함열읍":[35.9632,127.0480]}},"임실군":{"_":{"임실읍":[35.6178,127.2887]}},"장수군":{"_":{"장수읍":[35.6470,127.5196]}},"전주시":{"덕진구":{"송천동":[35.8451,127.1289],"인후동":[35.8349,127.1520],"호성동":[35.8614,127.1400]},"완산구":{"효자동":[35.8131,127.1101],"중화산동":[35.8212,127.1055],"삼천동":[35.7990,127.0946],"평화동":[35.8028,127.1187]}},"정읍시":{"_":{"수성동":[35.5700,126.8556],"신태인읍":[35.6228,126.9024]}},"진안군":{"_":{"진안읍":[35.7944,127.4237]}}},
+  "전라남도":{"강진군":{"_":{"강진읍":[34.6418,126.7678]}},"고흥군":{"_":{"고흥읍":[34.6076,127.2765],"포두면":[34.5370,127.4207]}},"곡성군":{"_":{"곡성읍":[35.2818,127.2910]}},"광양시":{"_":{"중마동":[34.9413,127.6960],"광양읍":[34.9395,127.5971],"황길동":[34.9696,127.7048]}},"구례군":{"_":{"구례읍":[35.2028,127.4643]}},"나주시":{"_":{"금남동":[35.0163,126.7127],"빛가람동":[35.0306,126.7630],"남평읍":[35.0481,126.8955]}},"담양군":{"_":{"담양읍":[35.3216,126.9883]}},"목포시":{"_":{"상동":[34.8118,126.3922],"옥암동":[34.7999,126.4319],"용해동":[34.8174,126.4086]}},"무안군":{"_":{"무안읍":[34.9919,126.4777],"삼향읍":[34.8997,126.4788]}},"보성군":{"_":{"보성읍":[34.7727,127.0804]}},"순천시":{"_":{"조례동":[34.9606,127.4875],"연향동":[34.9502,127.5026],"왕지동":[34.9701,127.4980],"해룡면":[34.9286,127.5472]}},"신안군":{"_":{"지도읍":[35.1003,126.3519]}},"여수시":{"_":{"학동":[34.7604,127.6622],"돌산읍":[34.7155,127.7224],"웅천동":[34.7449,127.7218],"여서동":[34.7652,127.6633]}},"영광군":{"_":{"영광읍":[35.2773,126.5124],"홍농읍":[35.4113,126.4601]}},"영암군":{"_":{"영암읍":[34.7998,126.6972]}},"완도군":{"_":{"완도읍":[34.3101,126.7552]}},"장성군":{"_":{"장성읍":[35.3020,126.7885]}},"장흥군":{"_":{"장흥읍":[34.6907,126.9100]}},"진도군":{"_":{"진도읍":[34.4871,126.2633]}},"함평군":{"_":{"함평읍":[35.0692,126.5167]}},"해남군":{"_":{"해남읍":[34.5741,126.5987],"송지면":[34.3886,126.5290]}},"화순군":{"_":{"화순읍":[35.0643,126.9863]}}},
+  "경상북도":{"경산시":{"_":{"중방동":[35.8248,128.7411],"하양읍":[35.9080,128.8183],"압량읍":[35.8598,128.8174]}},"경주시":{"_":{"성건동":[35.8562,129.2247],"황오동":[35.8441,129.2168],"외동읍":[35.7548,129.3159],"감포읍":[35.8125,129.5003]}},"고령군":{"_":{"대가야읍":[35.7245,128.2632]}},"구미시":{"_":{"원평동":[36.1196,128.3441],"형곡동":[36.1124,128.3537],"선산읍":[36.2210,128.3018],"인동동":[36.1314,128.4075]}},"군위군":{"_":{"군위읍":[36.2410,128.5716]}},"김천시":{"_":{"평화동":[36.1190,128.1137],"남면":[36.0535,128.0710],"아포읍":[36.1603,128.2635]}},"문경시":{"_":{"모전동":[36.5867,128.1875],"점촌동":[36.5973,128.1984],"마성면":[36.6404,128.0835]}},"봉화군":{"_":{"봉화읍":[36.8919,128.7313]}},"상주시":{"_":{"남성동":[36.4103,128.1587],"사벌국면":[36.4846,128.2318],"함창읍":[36.5633,128.1266]}},"성주군":{"_":{"성주읍":[35.9194,128.2822]}},"안동시":{"_":{"옥동":[36.5654,128.7237],"태화동":[36.5631,128.7253],"풍천면":[36.5714,128.5730],"일직면":[36.4873,128.6316]}},"영덕군":{"_":{"영덕읍":[36.4151,129.3653]}},"영양군":{"_":{"영양읍":[36.6671,129.1133]}},"영주시":{"_":{"휴천동":[36.8057,128.6245],"가흥동":[36.8200,128.6197],"풍기읍":[36.8421,128.4917]}},"영천시":{"_":{"완산동":[35.9734,128.9387],"금호읍":[35.9836,128.8392]}},"예천군":{"_":{"예천읍":[36.6569,128.4504]}},"울릉군":{"_":{"울릉읍":[37.4816,130.9062]}},"울진군":{"_":{"울진읍":[36.9925,129.4064],"후포면":[36.6829,129.4558]}},"의성군":{"_":{"의성읍":[36.3527,128.6969]}},"청도군":{"_":{"화양읍":[35.6474,128.7332]}},"청송군":{"_":{"청송읍":[36.4358,129.0570]}},"칠곡군":{"_":{"왜관읍":[35.9918,128.4012],"북삼읍":[35.9573,128.3810]}},"포항시":{"남구":{"대이동":[36.0072,129.3376],"오천읍":[36.0941,129.3568],"구룡포읍":[35.9896,129.5483]},"북구":{"죽도동":[36.0328,129.3652],"환여동":[36.0780,129.3887],"흥해읍":[36.1101,129.3458]}}},
+  "경상남도":{"거제시":{"_":{"고현동":[34.8803,128.6219],"장승포동":[34.9284,128.7136],"옥포동":[34.8979,128.6825]}},"거창군":{"_":{"거창읍":[35.6864,127.9097]}},"고성군":{"_":{"고성읍":[34.9740,128.3228]}},"김해시":{"_":{"내외동":[35.2285,128.8800],"장유동":[35.2085,128.8366],"진영읍":[35.3015,128.7410],"삼계동":[35.2485,128.8959]}},"남해군":{"_":{"남해읍":[34.8376,127.8925]}},"밀양시":{"_":{"내일동":[35.5043,128.7472],"삼랑진읍":[35.3813,128.7960]}},"사천시":{"_":{"사천동":[35.0021,128.0649],"삼천포동":[34.9371,128.0698]}},"산청군":{"_":{"산청읍":[35.4151,127.8739]}},"양산시":{"_":{"중부동":[35.3396,129.0356],"물금읍":[35.3093,128.9804],"웅상읍":[35.3823,129.1079]}},"의령군":{"_":{"의령읍":[35.3226,128.2617]}},"진주시":{"_":{"평거동":[35.1759,128.1016],"초전동":[35.1831,128.0836],"이현동":[35.1949,128.1105],"금산면":[35.1037,128.0683]}},"창녕군":{"_":{"창녕읍":[35.5422,128.4916]}},"창원시":{"마산합포구":{"합성동":[35.1983,128.5728],"가포동":[35.1794,128.5416],"진동면":[35.2316,128.4597]},"마산회원구":{"합성동":[35.2229,128.5857],"내서읍":[35.2531,128.5214]},"성산구":{"상남동":[35.2279,128.6828],"중앙동":[35.2274,128.6760],"반림동":[35.2428,128.6971]},"의창구":{"팔용동":[35.2591,128.6537],"북면":[35.3340,128.6072],"동읍":[35.2916,128.7280]},"진해구":{"경화동":[35.1547,128.6997],"이동":[35.1456,128.7110]}},"통영시":{"_":{"무전동":[34.8544,128.4331],"도산면":[34.9036,128.3753]}},"하동군":{"_":{"하동읍":[35.0670,127.7513]}},"함안군":{"_":{"가야읍":[35.2722,128.4072]}},"함양군":{"_":{"함양읍":[35.5195,127.7246]}},"합천군":{"_":{"합천읍":[35.5643,128.1656]}}},
+  "제주특별자치도":{"서귀포시":{"_":{"서귀동":[33.2541,126.5613],"대정읍":[33.2349,126.2538],"표선면":[33.3248,126.8369],"성산읍":[33.4417,126.9197],"남원읍":[33.2861,126.7204]}},"제주시":{"_":{"연동":[33.4996,126.5312],"노형동":[33.4894,126.4762],"이도동":[33.5061,126.5316],"애월읍":[33.4659,126.3132],"구좌읍":[33.5372,126.8392],"조천읍":[33.5292,126.6488]}}}
+};
+
+// ===================================================================
+// 지역 선택 UI
+// ===================================================================
+function initRegionSelects() {
+  const sido = document.getElementById('region-sido');
+  if (!sido || sido.options.length > 1) return;
+  Object.keys(REGION_DATA).sort().forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    sido.appendChild(opt);
+  });
+  const saved = localStorage.getItem('bbangpo_region');
+  if (saved) {
+    try {
+      weatherRegion = JSON.parse(saved);
+      const p = weatherRegion.name.split(' ');
+      sido.value = p[0];
+      onSidoChange(p[1], p[2], p[3]);
+      const conf = document.getElementById('region-confirmed');
+      if (conf) { conf.style.display='block'; conf.textContent='✅ '+weatherRegion.name+' 설정 완료!'; }
+      // 배지도 표시
+      const badge = document.getElementById('weather-badge');
+      if (badge) badge.style.display = 'inline-flex';
+    } catch(e) {}
+  }
+}
+
+function _resetSelect(el, placeholder) {
+  el.innerHTML = '<option value="">'+placeholder+'</option>';
+  el.disabled = true;
+}
+
+function onSidoChange(initSgg, initGu, initEmd) {
+  const sido = document.getElementById('region-sido').value;
+  const sggEl = document.getElementById('region-sigungu');
+  const guEl  = document.getElementById('region-gu');
+  const emdEl = document.getElementById('region-emd');
+  _resetSelect(sggEl,'② 시 / 군 선택');
+  _resetSelect(guEl, '③ 구 / 읍면동 선택');
+  _resetSelect(emdEl,'④ 읍 / 면 / 동 선택 (선택사항)');
+  if (!sido) return;
+  sggEl.disabled = false;
+  Object.keys(REGION_DATA[sido]).sort().forEach(k => {
+    const o=document.createElement('option'); o.value=k; o.textContent=k; sggEl.appendChild(o);
+  });
+  if (initSgg) { sggEl.value=initSgg; onSigunguChange(initGu, initEmd); }
+}
+
+function onSigunguChange(initGu, initEmd) {
+  const sido = document.getElementById('region-sido').value;
+  const sgg  = document.getElementById('region-sigungu').value;
+  const guEl  = document.getElementById('region-gu');
+  const emdEl = document.getElementById('region-emd');
+  _resetSelect(guEl, '③ 구 / 읍면동 선택');
+  _resetSelect(emdEl,'④ 읍 / 면 / 동 선택 (선택사항)');
+  if (!sgg) return;
+  guEl.disabled = false;
+  const data = REGION_DATA[sido][sgg];
+  Object.keys(data).sort().forEach(k => {
+    const o=document.createElement('option'); o.value=k; o.textContent=(k==='_'?'(전체)':k); guEl.appendChild(o);
+  });
+  // '_'만 있으면 자동 선택
+  if (Object.keys(data).length===1 && data['_']) {
+    guEl.value='_'; onGuChange(initEmd);
+  } else if (initGu) { guEl.value=initGu; onGuChange(initEmd); }
+}
+
+function onGuChange(initEmd) {
+  const sido = document.getElementById('region-sido').value;
+  const sgg  = document.getElementById('region-sigungu').value;
+  const gu   = document.getElementById('region-gu').value;
+  const emdEl = document.getElementById('region-emd');
+  _resetSelect(emdEl,'④ 읍 / 면 / 동 선택');
+  if (!gu) return;
+  const data = REGION_DATA[sido][sgg][gu];
+  if (!data) return;
+  emdEl.disabled = false;
+  Object.keys(data).sort().forEach(k => {
+    const coords = data[k];
+    const o=document.createElement('option');
+    o.value=k; o.textContent=k;
+    o.dataset.lat=coords[0]; o.dataset.lon=coords[1];
+    emdEl.appendChild(o);
+  });
+  if (initEmd) { emdEl.value=initEmd; onEmdChange(); }
+  else {
+    // 첫 번째 항목으로 자동 위치 설정 (구 단계 선택만으로도 작동)
+    if (emdEl.options.length > 1) {
+      emdEl.selectedIndex = 1;
+      onEmdChange(true); // 자동선택 플래그
+    }
+  }
+}
+
+function onEmdChange(auto) {
+  const sido  = document.getElementById('region-sido').value;
+  const sgg   = document.getElementById('region-sigungu').value;
+  const gu    = document.getElementById('region-gu').value;
+  const emdEl = document.getElementById('region-emd');
+  const emd   = emdEl.value;
+  if (!emd) return;
+  const sel = emdEl.options[emdEl.selectedIndex];
+  const lat = parseFloat(sel.dataset.lat);
+  const lon = parseFloat(sel.dataset.lon);
+  const guName = (gu && gu !== '_') ? gu+' ' : '';
+  const name = sido+' '+sgg+' '+guName+emd;
+  weatherRegion = {name, lat, lon};
+  localStorage.setItem('bbangpo_region', JSON.stringify(weatherRegion));
+  weatherCache = {};
+  const conf = document.getElementById('region-confirmed');
+  if (conf) { conf.style.display='block'; conf.textContent='✅ '+name+' 설정 완료!'; }
+  if (!auto) updateWeatherBadge();
+}
+
+// ===================================================================
+// 날씨 배지 + 캐시
+// ===================================================================
+function updateWeatherBadge() {
+  if (!weatherRegion) return;
+  const badge = document.getElementById('weather-badge');
+  if (badge) badge.style.display = 'inline-flex';
+  const todayKey = dateKey(new Date());
+  if (weatherCache[todayKey]) {
+    renderWeatherBadge(weatherCache[todayKey]);
+  } else {
+    // 배지에 로딩 표시
+    document.getElementById('weather-icon').textContent = '🔄';
+    document.getElementById('weather-temp').textContent = '';
+    document.getElementById('weather-desc').textContent = '로딩중';
+    _fetchAllWeather(() => renderWeatherBadge(weatherCache[todayKey]));
+  }
+}
+
+function renderWeatherBadge(data) {
+  if (!data) return;
+  const iconEl = document.getElementById('weather-icon');
+  const tempEl = document.getElementById('weather-temp');
+  const descEl = document.getElementById('weather-desc');
+  if (!iconEl) return;
+  const {icon, desc} = _wCodeToInfo(data.wcode);
+  iconEl.textContent = icon;
+  tempEl.textContent = Math.round(data.temp) + '°C';
+  descEl.textContent = weatherRegion ? weatherRegion.name.split(' ').slice(-1)[0] : desc;
+}
+
+// 전체 날씨 데이터 한 번에 가져오기
+function _fetchAllWeather(callback) {
+  if (!weatherRegion) { if(callback) callback(); return; }
+
+  // 로컬 파일 환경 감지 (file://)
+  if (location.protocol === 'file:') {
+    console.warn('날씨: 로컬 파일에서는 API 차단됨 (GitHub Pages에서 이용)');
+    _showWeatherLocalNotice();
+    if(callback) callback();
+    return;
+  }
+
+  // 중복 fetch 방지
+  if (_weatherFetching) { if(callback) callback(); return; }
+
+  // 오류 후 쿨다운 (1분)
+  const now = Date.now();
+  if (_weatherFetchFailed && (now - _weatherLastFetch) < WEATHER_FETCH_COOLDOWN) {
+    if(callback) callback();
+    return;
+  }
+
+  _weatherFetching = true;
+  _weatherLastFetch = now;
+  _weatherFetchFailed = false;
+
+  const url = 'https://api.open-meteo.com/v1/forecast'
+    + '?latitude=' + weatherRegion.lat
+    + '&longitude=' + weatherRegion.lon
+    + '&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max'
+    + '&hourly=temperature_2m,weathercode,precipitation_probability,relativehumidity_2m,apparent_temperature'
+    + '&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m,apparent_temperature'
+    + '&timezone=Asia%2FSeoul'
+    + '&forecast_days=16';
+
+  fetch(url)
+    .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(data => {
+      _weatherFetching = false;
+      _weatherFetchFailed = false;
+      _saveWeatherCache(data);
+      refreshCalendarWeather();
+      _hideWeatherLocalNotice();
+      if(callback) callback();
+    })
+    .catch(err => {
+      _weatherFetching = false;
+      _weatherFetchFailed = true;
+      console.warn('날씨 API 오류 (1분 후 재시도):', err.message);
+      const ic = document.getElementById('weather-icon');
+      const dc = document.getElementById('weather-desc');
+      if(ic) ic.textContent = '⚠️';
+      if(dc) dc.textContent = '오류';
+      // 날씨탭 오류 메시지
+      _showWeatherError(err.message);
+      if(callback) callback();
+    });
+}
+
+function _showWeatherLocalNotice() {
+  const el = document.getElementById('weather-local-notice');
+  if (el) el.style.display = 'block';
+  const loading = document.getElementById('weather-loading');
+  if (loading) loading.style.display = 'none';
+  const badge = document.getElementById('weather-badge');
+  if (badge) badge.style.display = 'none';
+}
+function _hideWeatherLocalNotice() {
+  const el = document.getElementById('weather-local-notice');
+  if (el) el.style.display = 'none';
+}
+function _showWeatherError(msg) {
+  const el = document.getElementById('weather-error-msg');
+  if (el) {
+    el.textContent = '⚠️ 날씨 로딩 실패. 잠시 후 🔄 버튼으로 다시 시도하세요.';
+    el.style.display = 'block';
+  }
+  const loading = document.getElementById('weather-loading');
+  if (loading) loading.style.display = 'none';
+}
+
+function fetchWeatherForDate(dateKeyStr, callback) {
+  if (!weatherRegion) { if(callback) callback(null); return; }
+  if (weatherCache[dateKeyStr]) { if(callback) callback(weatherCache[dateKeyStr]); return; }
+
+  const url = 'https://api.open-meteo.com/v1/forecast'
+    + '?latitude=' + weatherRegion.lat
+    + '&longitude=' + weatherRegion.lon
+    + '&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max'
+    + '&hourly=temperature_2m,weathercode,precipitation_probability,relativehumidity_2m,apparent_temperature'
+    + '&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m,apparent_temperature'
+    + '&timezone=Asia%2FSeoul'
+    + '&forecast_days=16';
+
+  fetch(url)
+    .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(data => {
+      _saveWeatherCache(data);
+      refreshCalendarWeather();
+      if (callback) callback(weatherCache[dateKeyStr]);
+    })
+    .catch(err => {
+      console.error('날씨 오류:', err);
+      if(callback) callback(null);
+    });
+}
+
+// 날씨 데이터 캐시 저장 공통 함수
+function _saveWeatherCache(data) {
+  if (!data || !data.daily || !data.daily.time) return;
+  const days = data.daily.time;
+  days.forEach((day, i) => {
+    weatherCache[day] = {
+      wcode: data.daily.weathercode[i],
+      temp:  (data.daily.temperature_2m_max[i] + data.daily.temperature_2m_min[i]) / 2,
+      tmax:  data.daily.temperature_2m_max[i],
+      tmin:  data.daily.temperature_2m_min[i],
+      rain:  data.daily.precipitation_probability_max[i] || 0,
+      wind:  data.daily.windspeed_10m_max[i] || 0,
+      hourly: data.hourly ? {
+        temps:  data.hourly.temperature_2m ? data.hourly.temperature_2m.slice(i*24, i*24+24) : [],
+        wcodes: data.hourly.weathercode ? data.hourly.weathercode.slice(i*24, i*24+24) : [],
+        rains:  data.hourly.precipitation_probability ? data.hourly.precipitation_probability.slice(i*24, i*24+24) : [],
+      } : null
+    };
+  });
+  // 오늘 현재값 override
+  if (data.current) {
+    const tk = dateKey(new Date());
+    if (weatherCache[tk]) {
+      weatherCache[tk].temp     = data.current.temperature_2m;
+      weatherCache[tk].wcode    = data.current.weathercode;
+      weatherCache[tk].humidity = data.current.relativehumidity_2m;
+      weatherCache[tk].feel     = data.current.apparent_temperature;
+    }
+  }
+}
+
+function _wCodeToInfo(code) {
+  if (code == null) return {icon:'—', desc:'—'};
+  if (code === 0)   return {icon:'☀️',  desc:'맑음'};
+  if (code <= 2)    return {icon:'🌤️', desc:'구름 조금'};
+  if (code === 3)   return {icon:'☁️',  desc:'흐림'};
+  if (code <= 49)   return {icon:'🌫️', desc:'안개'};
+  if (code <= 57)   return {icon:'🌦️', desc:'이슬비'};
+  if (code <= 65)   return {icon:'🌧️', desc:'비'};
+  if (code <= 77)   return {icon:'❄️',  desc:'눈'};
+  if (code <= 82)   return {icon:'🌦️', desc:'소나기'};
+  if (code <= 86)   return {icon:'🌨️', desc:'눈소나기'};
+  if (code <= 99)   return {icon:'⛈️',  desc:'뇌우'};
+  return {icon:'🌡️', desc:'날씨 정보'};
+}
+
+// ===================================================================
+// 캘린더 날씨 아이콘 갱신
+// ===================================================================
+function refreshCalendarWeather() {
+  if (!weatherRegion) return;
+  document.querySelectorAll('.cal-day:not(.other-month)').forEach(el => {
+    const key = el._dateKey;
+    if (!key || !weatherCache[key]) return;
+    let span = el.querySelector('.cal-weather');
+    if (!span) {
+      span = document.createElement('span');
+      span.className = 'cal-weather';
+      span.onclick = (e) => { e.stopPropagation(); openWeatherModal(key); };
+      el.appendChild(span);
+    }
+    const {icon} = _wCodeToInfo(weatherCache[key].wcode);
+    span.textContent = icon;
+  });
+}
+
+// ===================================================================
+// 날씨 상세 모달
+// ===================================================================
+function openWeatherModal(key) {
+  const data = weatherCache[key];
+  if (!data) return;
+  const d = parseKey(key);
+  const {icon, desc} = _wCodeToInfo(data.wcode);
+  document.getElementById('weather-modal-title').textContent =
+    (d.getMonth()+1)+'월 '+d.getDate()+'일 날씨 예보'+(weatherRegion?' — '+weatherRegion.name.split(' ').slice(-1)[0]:'');
+  document.getElementById('weather-modal-icon').textContent = icon;
+  document.getElementById('weather-modal-temp').textContent = Math.round(data.temp)+'°C';
+  document.getElementById('weather-modal-info').textContent = desc;
+  document.getElementById('wm-max').textContent  = Math.round(data.tmax)+'°C';
+  document.getElementById('wm-min').textContent  = Math.round(data.tmin)+'°C';
+  document.getElementById('wm-rain').textContent = (data.rain||0)+'%';
+  document.getElementById('wm-wind').textContent = Math.round(data.wind)+'km/h';
+
+  // 시간별 예보
+  const hourly = document.getElementById('wm-hourly');
+  hourly.innerHTML = '';
+  if (data.hourly && data.hourly.temps.length) {
+    const showHours = [0,3,6,9,12,15,18,21];
+    showHours.forEach(h => {
+      if (h >= data.hourly.temps.length) return;
+      const {icon:hi} = _wCodeToInfo(data.hourly.wcodes[h]);
+      const item = document.createElement('div');
+      item.className = 'weather-hour-item';
+      item.innerHTML = '<div class="weather-hour-time">'+String(h).padStart(2,'0')+':00</div>'
+        +'<div class="weather-hour-icon">'+hi+'</div>'
+        +'<div class="weather-hour-temp">'+Math.round(data.hourly.temps[h])+'°C</div>'
+        +'<div class="weather-hour-rain">'+( data.hourly.rains[h]||0)+'%💧</div>';
+      hourly.appendChild(item);
+    });
+  }
+  document.getElementById('weather-modal-bg').classList.add('open');
+}
+
+function closeWeatherModal() {
+  document.getElementById('weather-modal-bg').classList.remove('open');
+}
+
+// 기존 fetchWeather 배지 탭용
+function fetchWeather() { updateWeatherBadge(); }
+
+// ============================================================
+// 날씨 탭 렌더링
+// ============================================================
+function renderWeatherTab() {
+  const noRegion  = document.getElementById('weather-no-region');
+  const loading   = document.getElementById('weather-loading');
+  const todayCard = document.getElementById('weather-today-card');
+  const weekList  = document.getElementById('weather-week-list');
+  const regionName= document.getElementById('weather-region-name');
+
+  if (!weatherRegion) {
+    if (noRegion)  noRegion.style.display  = 'block';
+    if (loading)   loading.style.display   = 'none';
+    if (todayCard) todayCard.style.display = 'none';
+    if (weekList)  weekList.style.display  = 'none';
+    return;
+  }
+
+  // 지역 설정됨
+  if (noRegion)  noRegion.style.display  = 'none';
+  if (regionName) regionName.textContent = weatherRegion.name;
+
+  const todayKey = dateKey(new Date());
+
+  if (weatherCache[todayKey]) {
+    // 캐시 있으면 바로 표시
+    if (loading)   loading.style.display   = 'none';
+    const rb = document.getElementById('weather-refresh-btn');
+    if (rb) rb.style.display = 'inline-block';
+    _renderWeatherTabData();
+  } else {
+    // 로딩 표시 후 API 호출
+    if (loading)   loading.style.display   = 'block';
+    if (todayCard) todayCard.style.display = 'none';
+    if (weekList)  weekList.style.display  = 'none';
+    const refBtn = document.getElementById('weather-refresh-btn');
+    if (refBtn) refBtn.style.display = 'none';
+    _fetchAllWeather(() => {
+      if (loading) loading.style.display = 'none';
+      const rb = document.getElementById('weather-refresh-btn');
+      if (rb) rb.style.display = 'inline-block';
+      _renderWeatherTabData();
+    });
+  }
+}
+
+function _renderWeatherTabData() {
+  const todayKey  = dateKey(new Date());
+  const data      = weatherCache[todayKey];
+  if (!data) return;
+  const {icon, desc} = _wCodeToInfo(data.wcode);
+
+  // 오늘 카드
+  document.getElementById('wtc-icon').textContent  = icon;
+  document.getElementById('wtc-desc').textContent  = desc;
+  document.getElementById('wtc-temp').textContent  = Math.round(data.temp)+'°C';
+  document.getElementById('wtc-range').textContent = '최고 '+Math.round(data.tmax)+'° / 최저 '+Math.round(data.tmin)+'°';
+  document.getElementById('wtc-rain').textContent  = (data.rain||0)+'%';
+  document.getElementById('wtc-wind').textContent  = Math.round(data.wind)+'km/h';
+  document.getElementById('wtc-humidity').textContent = (data.humidity||'—')+(data.humidity?'%':'');
+  document.getElementById('wtc-feel').textContent  = data.feel ? Math.round(data.feel)+'°C' : '—';
+
+  // 시간별
+  const hourlyEl = document.getElementById('wtc-hourly');
+  hourlyEl.innerHTML = '';
+  if (data.hourly && data.hourly.temps.length) {
+    const now = new Date().getHours();
+    const hours = [0,3,6,9,12,15,18,21].filter(h => h >= now || now <= 3);
+    (hours.length ? hours : [0,3,6,9,12,15,18,21]).forEach(h => {
+      if (h >= data.hourly.temps.length) return;
+      const {icon:hi} = _wCodeToInfo(data.hourly.wcodes[h]);
+      const el = document.createElement('div');
+      el.className = 'whs-item'+(h===now?' whs-now':'');
+      el.innerHTML = '<div class="whs-time">'+String(h).padStart(2,'0')+':00</div>'
+        +'<div class="whs-icon">'+hi+'</div>'
+        +'<div class="whs-temp">'+Math.round(data.hourly.temps[h])+'°</div>'
+        +'<div class="whs-rain">'+( data.hourly.rains[h]||0)+'%💧</div>';
+      hourlyEl.appendChild(el);
+    });
+  }
+
+  document.getElementById('weather-today-card').style.display = 'block';
+
+  // 7일 예보
+  const weekItems = document.getElementById('weather-week-items');
+  weekItems.innerHTML = '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(today); d.setDate(d.getDate()+i);
+    const key = dateKey(d);
+    const wd = weatherCache[key];
+    if (!wd) continue;
+    const {icon:wi, desc:wdesc} = _wCodeToInfo(wd.wcode);
+    const dow = ['일','월','화','수','목','금','토'][d.getDay()];
+    const el = document.createElement('div');
+    el.className = 'weather-week-item';
+    el.onclick = () => openWeatherModal(key);
+    el.innerHTML = '<div class="wwi-date">'+(d.getMonth()+1)+'/'+(d.getDate())+'</div>'
+      +'<div class="wwi-day">'+dow+'</div>'
+      +'<div class="wwi-icon">'+wi+'</div>'
+      +'<div class="wwi-desc">'+wdesc+'</div>'
+      +'<div><div class="wwi-temp"><span class="wwi-max">'+Math.round(wd.tmax)+'°</span> / <span class="wwi-min">'+Math.round(wd.tmin)+'°</span></div>'
+      +'<div class="wwi-rain">💧 '+(wd.rain||0)+'%</div></div>';
+    weekItems.appendChild(el);
+  }
+  document.getElementById('weather-week-list').style.display = 'block';
+}
+
+function refreshWeatherNow() {
+  _weatherFetchFailed = false;
+  _weatherFetching = false;
+  weatherCache = {};
+  const errEl = document.getElementById('weather-error-msg');
+  if (errEl) errEl.style.display = 'none';
+  renderWeatherTab();
+  updateWeatherBadge();
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+}
+
+// ============================================================
+// 근무 계산
+// ============================================================
+function findFirstDateForMonth(y, m) {
+  const mk = monthKey(y, m);
+  if (monthFirstDates[mk]) return monthFirstDates[mk];
+  // 가장 가까운 이전 달 찾기
+  let best = null, bestTs = -Infinity;
+  const targetTs = new Date(y, m, 1).getTime();
+  Object.entries(monthFirstDates).forEach(([k, fd]) => {
+    const p = k.split('-');
+    const ts = new Date(+p[0], +p[1]-1, 1).getTime();
+    if (ts <= targetTs && ts > bestTs) { bestTs = ts; best = fd; }
+  });
+  return best;
+}
+
+function getShifts(key) {
+  // 수동 변경 우선 (배열 또는 구버전 문자열 호환)
+  if (shiftOverrides[key]) {
+    const ov = shiftOverrides[key];
+    return Array.isArray(ov) ? ov : [ov];
+  }
+  const parts = key.split('-');
+  const y = +parts[0], m = +parts[1]-1, d = +parts[2];
+  const fd = findFirstDateForMonth(y, m);
+  if (!fd) return [];
+  const fp = fd.split('-');
+  const start = new Date(+fp[0], +fp[1]-1, +fp[2]);
+  const target = new Date(y, m, d);
+  const diff = Math.round((target - start) / 86400000);
+  const idx = ((diff % 5) + 5) % 5;
+  return SHIFT_PATTERN[idx];
+}
+
+function isMonthRegistered(y, m) {
+  return !!monthFirstDates[monthKey(y, m)];
+}
+
+// ============================================================
+// 초기화 (DOMContentLoaded)
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  const today = new Date();
+  currentYear  = today.getFullYear();
+  currentMonth = today.getMonth();
+  const dow = today.getDay();
+  currentWeekStart = new Date(today);
+  currentWeekStart.setDate(today.getDate() - dow);
+
+  // localStorage 로드
+  try {
+    const u  = localStorage.getItem('bbangpo_user');      if(u)  userInfo         = JSON.parse(u);
+    const mn = localStorage.getItem('bbangpo_months');    if(mn) monthFirstDates   = JSON.parse(mn);
+    const so = localStorage.getItem('bbangpo_overrides'); if(so) shiftOverrides    = JSON.parse(so);
+    const m  = localStorage.getItem('bbangpo_memo');      if(m)  memoData          = JSON.parse(m);
+    const po = localStorage.getItem('bbangpo_partner_overrides'); if(po) partnerOverrides = JSON.parse(po);
+  } catch(e) {}
+
+  // 이벤트 리스너
+  document.getElementById('rank').addEventListener('change', checkStartBtn);
+  document.getElementById('username').addEventListener('input', checkStartBtn);
+  document.getElementById('first-date').addEventListener('change', function() {
+    if (this.value) renderPreviewFromDate(this.value);
+    checkStartBtn();
+  });
+
+  // 설정 화면 초기값
+  setupMonth = monthKey(currentYear, currentMonth);
+  renderMonthTabs();
+  const fd = monthFirstDates[setupMonth];
+  if (fd) { document.getElementById('first-date').value = fd; renderPreviewFromDate(fd); }
+
+  // 저장된 사용자 있으면 복원
+  if (userInfo.rank)        document.getElementById('rank').value         = userInfo.rank;
+  if (userInfo.name)        document.getElementById('username').value     = userInfo.name;
+  if (userInfo.partnerRank) document.getElementById('partner-rank').value = userInfo.partnerRank;
+  if (userInfo.partnerName) document.getElementById('partner-name').value = userInfo.partnerName;
+
+  checkStartBtn();
+  initRegionSelects();
+
+  // 캘린더로 바로 이동
+  if (userInfo.name && Object.keys(monthFirstDates).length > 0) {
+    updateBadge();
+    showCalendar();
+  }
+});
+
+// ============================================================
+// 설정
+// ============================================================
+function renderMonthTabs() {
+  const container = document.getElementById('month-tabs');
+  container.innerHTML = '';
+  const today = new Date();
+  for (let i = -3; i <= 4; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth()+i, 1);
+    const y = d.getFullYear(), m = d.getMonth();
+    const mk = monthKey(y, m);
+    const isReg = !!monthFirstDates[mk];
+    const isActive = setupMonth === mk;
+    const btn = document.createElement('button');
+    btn.className = 'month-tab' + (isReg?' registered':'') + (isActive?' active':'');
+    btn.textContent = (m+1)+'월'+(isReg?' ✓':'');
+    btn.onclick = () => selectSetupMonth(y, m);
+    container.appendChild(btn);
+  }
+}
+
+function selectSetupMonth(y, m) {
+  setupMonth = monthKey(y, m);
+  document.getElementById('month-date-label').textContent = (m+1)+'월 첫 MOR 근무 날짜';
+  const fd = monthFirstDates[setupMonth];
+  document.getElementById('first-date').value = fd || '';
+  if (fd) renderPreviewFromDate(fd);
+  else document.getElementById('preview-card').style.display = 'none';
+  renderMonthTabs();
+  checkStartBtn();
+}
+
+function saveMonthDate() {
+  const fd = document.getElementById('first-date').value;
+  if (!fd || !setupMonth) { showToast('날짜를 선택해주세요!'); return; }
+  // 사용자 정보도 함께 저장
+  const rank        = document.getElementById('rank').value;
+  const name        = document.getElementById('username').value.trim();
+  const partnerRank = document.getElementById('partner-rank').value;
+  const partnerName = document.getElementById('partner-name').value.trim();
+  if (rank && name) {
+    userInfo = {rank, name, partnerRank, partnerName};
+    localStorage.setItem('bbangpo_user', JSON.stringify(userInfo));
+  }
+  monthFirstDates[setupMonth] = fd;
+  localStorage.setItem('bbangpo_months', JSON.stringify(monthFirstDates));
+  renderMonthTabs();
+  renderPreviewFromDate(fd);
+  checkStartBtn();
+  showToast(parseInt(setupMonth.split('-')[1])+'월 저장 완료!');
+}
+
+function clearMonthDate() {
+  if (!setupMonth || !monthFirstDates[setupMonth]) return;
+  delete monthFirstDates[setupMonth];
+  localStorage.setItem('bbangpo_months', JSON.stringify(monthFirstDates));
+  document.getElementById('first-date').value = '';
+  document.getElementById('preview-card').style.display = 'none';
+  renderMonthTabs();
+  checkStartBtn();
+  showToast('삭제 완료');
+}
+
+function renderPreviewFromDate(fdStr) {
+  const BG = {MOR:'rgba(255,213,79,.15)',MID:'rgba(239,154,154,.15)',SWI:'rgba(206,147,216,.15)',AFT:'rgba(129,199,132,.15)',OFF:'rgba(125,133,144,.08)'};
+  document.getElementById('preview-card').style.display = 'block';
+  const ct = document.getElementById('preview-content');
+  ct.innerHTML = '';
+  const p = fdStr.split('-');
+  const start = new Date(+p[0], +p[1]-1, +p[2]);
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(start); d.setDate(d.getDate()+i);
+    const shifts = SHIFT_PATTERN[i % 5];
+    const mainSh = shifts[0];
+    const el = document.createElement('div');
+    el.className = 'p-item';
+    el.style.background = BG[mainSh] || BG.OFF;
+    const labels = shifts.map(sh => '<span style="font-size:9px;font-weight:700;color:'+(SHIFT_COLORS[sh]||'#888')+';">'+(sh==='MID'?'MID◀':sh==='SWI'?'SWI▶':sh)+'</span>').join('<span style="font-size:8px;color:#555;">+</span>');
+    el.innerHTML = '<div style="font-size:9px;color:var(--muted);">'+(d.getMonth()+1)+'/'+d.getDate()+'</div>'
+      +'<div style="font-size:9px;color:var(--muted);">('+DAYS_KO[d.getDay()]+')</div>'
+      +'<div style="margin-top:3px;">'+labels+'</div>';
+    ct.appendChild(el);
+  }
+}
+
+function checkStartBtn() {
+  const r = document.getElementById('rank').value;
+  const n = document.getElementById('username').value.trim();
+  const hasMonth = Object.keys(monthFirstDates).length > 0;
+  document.getElementById('start-btn').disabled = !(r && n && hasMonth);
+}
+
+function startScheduler() {
+  const rank        = document.getElementById('rank').value;
+  const name        = document.getElementById('username').value.trim();
+  const partnerRank = document.getElementById('partner-rank').value;
+  const partnerName = document.getElementById('partner-name').value.trim();
+  if (!rank || !name || !Object.keys(monthFirstDates).length) return;
+  userInfo = {rank, name, partnerRank, partnerName};
+  localStorage.setItem('bbangpo_user', JSON.stringify(userInfo));
+  updateBadge();
+  showCalendar();
+}
+
+// ============================================================
+// 캘린더
+// ============================================================
+function updateBadge() {
+  document.getElementById('user-badge').textContent = '✏️ '+userInfo.rank+' '+userInfo.name;
+  document.getElementById('reset-badge').style.display = 'block';
+}
+
+function showCalendar() {
+  showPage('calendar');
+  document.getElementById('view-tabs').style.display = 'flex';
+  // 명언 카드 표시
+  const qc = document.getElementById('quote-card');
+  if (qc) qc.style.display = 'block';
+  showQuote();
+  // 날씨 배지 업데이트
+  if (weatherRegion) {
+    updateWeatherBadge();
+  } else {
+    const badge = document.getElementById('weather-badge');
+    if (badge) {
+      badge.style.display = 'inline-flex';
+      document.getElementById('weather-icon').textContent = '🌤️';
+      document.getElementById('weather-temp').textContent = '';
+      document.getElementById('weather-desc').textContent = '설정에서 지역 선택';
+    }
+  }
+  // 뷰 상태 동기화
+  ['month','week','memo','weather'].forEach(m => {
+    const v = document.getElementById('view-'+m);
+    const t = document.getElementById('tab-'+m);
+    if (v) v.style.display = m===currentView ? 'block' : 'none';
+    if (t) t.classList.toggle('active', m===currentView);
+  });
+  updateUserBanner();
+  if (currentView === 'month') renderCalendar();
+  else if (currentView === 'week') renderWeek();
+  else renderMemoList();
+}
+
+function switchView(mode) {
+  currentView = mode;
+  ['month','week','memo','weather'].forEach(m => {
+    const tab = document.getElementById('tab-'+m);
+    const view = document.getElementById('view-'+m);
+    if (tab) tab.classList.toggle('active', m===mode);
+    if (view) view.style.display = m===mode ? 'block' : 'none';
+  });
+  if (mode==='month') renderCalendar();
+  else if (mode==='week') renderWeek();
+  else if (mode==='memo') renderMemoList();
+  else if (mode==='weather') renderWeatherTab();
+}
+
+function updateUserBanner() {
+  if (!userInfo.name) return;
+  document.getElementById('banner-rank').textContent = userInfo.rank;
+  document.getElementById('banner-name').textContent = userInfo.name;
+
+  // 오늘 조원 (날짜별 변경 우선)
+  const todayKey = dateKey(new Date());
+  const dp = partnerOverrides[todayKey];
+  const partnerEl = document.getElementById('banner-partner');
+  if (dp && dp.rank && dp.name) {
+    partnerEl.innerHTML = '오늘 파트너 · <strong style="color:var(--swi);">'+escHtml(dp.rank)+' '+escHtml(dp.name)+'</strong>'
+      +' <span style="font-size:9px;background:rgba(206,147,216,.2);color:var(--swi);border-radius:3px;padding:1px 4px;">변경</span>';
+  } else if (userInfo.partnerRank && userInfo.partnerName) {
+    partnerEl.innerHTML = '파트너 · <strong>'+escHtml(userInfo.partnerRank)+' '+escHtml(userInfo.partnerName)+'</strong>';
+  } else {
+    partnerEl.textContent = '';
+  }
+
+  // 오늘 날짜·근무
+  const today = new Date();
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  document.getElementById('banner-date').textContent =
+    today.getFullYear()+'년 '+months[today.getMonth()]+' '+today.getDate()+'일 ('+DAYS_KO[today.getDay()]+')';
+
+  const todayShifts = getShifts(todayKey);
+  const todayShiftEl = document.getElementById('banner-today-shift');
+  if (todayShifts.length > 0 && todayShifts[0] !== 'OFF') {
+    todayShiftEl.innerHTML = todayShifts.map(sh =>
+      '<span style="color:'+(SHIFT_COLORS[sh]||'var(--muted)')+';margin-right:3px;">'
+      +(sh==='MID'?'MID◀':sh==='SWI'?'SWI▶':sh)+'</span>'
+    ).join('+');
+  } else if (todayShifts[0] === 'OFF') {
+    todayShiftEl.innerHTML = '<span style="color:var(--muted);">비번 😴</span>';
+  } else {
+    todayShiftEl.innerHTML = '<span style="color:var(--muted);font-size:11px;">미등록</span>';
+  }
+}
+
+function renderCalendar() {
+  updateUserBanner();
+  const isEst = !isMonthRegistered(currentYear, currentMonth);
+  document.getElementById('cal-month-title').innerHTML = currentYear+'년 '+(currentMonth+1)+'월'
+    +(isEst?' <span style="font-size:11px;background:rgba(206,147,216,.2);color:var(--swi);border-radius:4px;padding:2px 6px;font-family:Noto Sans KR,sans-serif;font-weight:500;">예상</span>':'');
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '<div class="cal-dow">일</div><div class="cal-dow">월</div><div class="cal-dow">화</div><div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div><div class="cal-dow">토</div>';
+
+  const today    = new Date();
+  const todayKey = dateKey(today);
+  const firstDow = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+  const daysInPrev  = new Date(currentYear, currentMonth, 0).getDate();
+  let counts = {MOR:0, AFT:0, SWI:0, MID:0, OFF:0};
+
+  // 이전달 채우기
+  for (let i = firstDow-1; i >= 0; i--) {
+    const el = document.createElement('div');
+    el.className = 'cal-day other-month';
+    el.innerHTML = '<span class="day-num">'+(daysInPrev-i)+'</span>';
+    grid.appendChild(el);
+  }
+
+  // 현재달
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dt  = new Date(currentYear, currentMonth, d);
+    const key = dateKey(dt);
+    const dow = dt.getDay();
+    const shifts  = getShifts(key);
+    const memo    = memoData[key];
+    const holiday = HOLIDAYS[key];
+    const hasPartnerChange = !!partnerOverrides[key];
+
+    // 통계 카운트
+    // MID는 1일차(MOR+MID) 날에만 카운트 - 2일차(MID+SWI)의 MID는 전날 출근의 연장이므로 제외
+    shifts.forEach(sh => {
+      if (counts[sh] === undefined) return;
+      if (sh === 'MID') {
+        // MOR와 같이 있는 날(1일차)만 카운트
+        if (shifts.includes('MOR')) counts.MID++;
+      } else {
+        counts[sh]++;
+      }
+    });
+
+    let cls = 'cal-day';
+    if (key === todayKey) cls += ' today';
+    if (holiday)  cls += ' holiday';
+    else if (dow===0) cls += ' sunday';
+    else if (dow===6) cls += ' saturday';
+
+    const el = document.createElement('div');
+    el.className = cls;
+    el._dateKey = key;
+    el.onclick = () => openModal(key, d, dow);
+
+    let html = '<span class="day-num">'+d+'</span>';
+    if (holiday) html += '<div class="day-holiday">'+holiday+'</div>';
+
+    if (shifts.length > 0) {
+      shifts.forEach(sh => {
+        const si = SHIFT_INFO[sh];
+        if (!si) return;
+        if (sh === 'OFF') {
+          html += '<span class="shift-badge shift-OFF">비번</span>';
+        } else if (sh === 'MID') {
+          html += '<span class="shift-badge shift-MID">MID ◀</span>';
+          html += '<span class="shift-time shift-MID">00:00~07:30</span>';
+        } else if (sh === 'SWI') {
+          html += '<span class="shift-badge shift-SWI">SWI ▶</span>';
+          html += '<span class="shift-time shift-SWI">17:30~00:00</span>';
+        } else {
+          html += '<span class="shift-badge shift-'+sh+'">'+si.label+'</span>';
+          html += '<span class="shift-time shift-'+sh+'">'+si.time+'</span>';
+        }
+      });
+      if (isEst) html += '<span class="est-badge">예상</span>';
+    }
+
+    // 메모 dot
+    if (memo && memo.memo) html += '<div class="memo-dot"></div>';
+    // 조원변경 dot
+    if (hasPartnerChange) html += '<div class="partner-dot"></div>';
+    // 플래그 + 메모 미리보기
+    if (memo && (memo.flag || memo.memo)) {
+      html += '<div class="day-flag-memo">';
+      if (memo.flag) html += '<span style="font-size:8px;flex-shrink:0;">'+memo.flag+'</span>';
+      if (memo.memo) {
+        const short = memo.memo.length > 21 ? memo.memo.slice(0,20)+'…' : memo.memo;
+        html += '<span class="day-memo">'+escHtml(short)+'</span>';
+      }
+      html += '</div>';
+    }
+
+    el.innerHTML = html;
+    grid.appendChild(el);
+  }
+
+  // 다음달 채우기
+  const used = firstDow + daysInMonth;
+  const rem  = used % 7 === 0 ? 0 : 7 - (used % 7);
+  for (let d = 1; d <= rem; d++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day other-month';
+    el.innerHTML = '<span class="day-num">'+d+'</span>';
+    grid.appendChild(el);
+  }
+
+  document.getElementById('stat-mor').textContent = counts.MOR;
+  document.getElementById('stat-aft').textContent = counts.AFT;
+  document.getElementById('stat-swi').textContent = counts.SWI;
+  document.getElementById('stat-mid').textContent = counts.MID;
+  document.getElementById('stat-off').textContent = counts.OFF;
+  updateCumStats();
+  updateNextMorCounter();
+  // 날씨 아이콘 적용
+  if (weatherRegion) {
+    const msKey = dateKey(new Date(currentYear, currentMonth, 1));
+    if (!weatherCache[msKey]) {
+      _fetchAllWeather(() => refreshCalendarWeather());
+    } else {
+      setTimeout(() => refreshCalendarWeather(), 0);
+    }
+  }
+}
+
+function changeMonth(dir) {
+  currentMonth += dir;
+  if (currentMonth > 11) { currentMonth=0; currentYear++; }
+  if (currentMonth < 0)  { currentMonth=11; currentYear--; }
+  renderCalendar();
+}
+
+// ============================================================
+// 주별
+// ============================================================
+function renderWeek() {
+  updateUserBanner();
+  const ws = currentWeekStart;
+  const we = new Date(ws); we.setDate(we.getDate()+6);
+  document.getElementById('week-title').textContent =
+    (ws.getMonth()+1)+'월 '+ws.getDate()+'일 ~ '+(we.getMonth()+1)+'월 '+we.getDate()+'일';
+
+  const todayKey  = dateKey(new Date());
+  const container = document.getElementById('week-days');
+  container.innerHTML = '';
+  let workCount=0, workMins=0, offCount=0, offMins=0;
+
+  for (let i = 0; i < 7; i++) {
+    const d   = new Date(ws); d.setDate(d.getDate()+i);
+    const key = dateKey(d);
+    const dow = d.getDay();
+    const shifts    = getShifts(key);
+    const memo      = memoData[key] || {};
+    const holiday   = HOLIDAYS[key];
+    const isToday   = key === todayKey;
+    const dp        = partnerOverrides[key];
+
+    // 주간 통계
+    const repSh = shifts.length > 0 ? shifts[0] : null;
+    if (repSh === 'OFF') { offCount++; offMins += 1440; }
+    else if (repSh) {
+      workCount++;
+      shifts.filter(s=>s!=='OFF').forEach(s => {
+        if (s === 'MID' && !shifts.includes('MOR')) return; // 2일차 MID 제외
+        workMins += (SHIFT_INFO[s]||{mins:0}).mins;
+      });
+    }
+
+    const hasMemo    = !!(memo.memo || memo.flag);
+    const hasPartner = !!dp;
+
+    const card = document.createElement('div');
+    let cls = 'week-day-card fade-in';
+    if (isToday)   cls += ' today-card';
+    if (hasMemo)   cls += ' has-memo';
+    if (hasPartner && !hasMemo) cls += ' has-partner';
+    card.className = cls;
+    card.onclick = () => openModal(key, d.getDate(), dow);
+
+    let dowColor = 'var(--text)';
+    if (dow===0 || holiday) dowColor = '#ff6b6b';
+    else if (dow===6) dowColor = '#4fc3f7';
+
+    // 근무 이름 HTML
+    const shiftNameHtml = shifts.length > 0
+      ? shifts.map(sh => {
+          const c = SHIFT_COLORS[sh]||'var(--muted)';
+          const lbl = sh==='MID'?'MID ◀':sh==='SWI'?'SWI ▶':(SHIFT_INFO[sh]||{label:sh}).label;
+          return '<span style="color:'+c+';font-family:Black Han Sans,sans-serif;font-size:16px;">'+lbl+'</span>';
+        }).join('<span style="color:var(--muted);font-size:12px;margin:0 3px;">+</span>')
+      : '<span style="color:var(--muted);">—</span>';
+
+    const shiftTimeHtml = shifts.filter(sh=>sh!=='OFF').map(sh => {
+      const si = SHIFT_INFO[sh]; if(!si) return '';
+      return '<span style="color:'+(SHIFT_COLORS[sh]||'var(--muted)')+';font-size:10px;">'+si.time+'</span>';
+    }).join('<span style="color:var(--muted);font-size:9px;"> / </span>');
+
+    let html = '<div class="wdc-header">'
+      +'<div><div class="wdc-date" style="color:'+dowColor+';">'+(d.getMonth()+1)+'.'+String(d.getDate()).padStart(2,'0')+'</div>'
+      +'<div class="wdc-dow" style="color:'+dowColor+';">'+DAYS_KO[dow]+'요일'+(holiday?' · <span class="wdc-holiday">'+holiday+'</span>':'')+'</div></div>';
+    if (isToday) html += '<div class="wdc-today-badge">TODAY</div>';
+    html += '<div style="margin-left:auto;text-align:right;"><div>'+shiftNameHtml+'</div><div style="margin-top:2px;">'+shiftTimeHtml+'</div></div></div>';
+
+    // 바디 (조원변경 / 플래그 / 메모)
+    if (dp || hasMemo) {
+      html += '<div class="wdc-divider"></div><div class="wdc-body">';
+      if (dp) html += '<span style="color:var(--swi);">👥 '+escHtml(dp.rank)+' '+escHtml(dp.name)+'</span>'+(hasMemo?'<br>':'');
+      if (memo.flag) html += '<span class="wdc-flag">'+memo.flag+'</span>';
+      if (memo.memo) html += '<span>'+escHtml(memo.memo)+'</span>';
+      html += '</div>';
+    }
+
+    // 근무 시간 바
+    html += buildTimeline(key, shifts);
+
+    // 총 근무시간
+    const dayWorkMins = shifts.filter(s=>s!=='OFF').reduce((acc,s) => {
+      if (s === 'MID' && !shifts.includes('MOR')) return acc; // 2일차 MID 제외
+      return acc + (SHIFT_INFO[s]?SHIFT_INFO[s].mins:0);
+    }, 0);
+    if (shifts.length===1 && shifts[0]==='OFF') {
+      html += '<div class="wdc-hrs">😴 비번 <span>24시간</span></div>';
+    } else if (dayWorkMins > 0) {
+      html += '<div class="wdc-hrs">⏱ 총 근무 <span>'+Math.floor(dayWorkMins/60)+'시간'+(dayWorkMins%60?' '+dayWorkMins%60+'분':'')+'</span></div>';
+    }
+
+    card.innerHTML = html;
+    container.appendChild(card);
+  }
+
+  document.getElementById('week-work-count').textContent = workCount;
+  document.getElementById('week-work-time').textContent  = Math.floor(workMins/60)+'h '+workMins%60+'m';
+  document.getElementById('week-off-count').textContent  = offCount;
+  document.getElementById('week-off-time').textContent   = Math.floor(offMins/60)+'h '+offMins%60+'m';
+}
+
+function buildTimeline(key, shifts) {
+  const BG = {MOR:'rgba(255,213,79,.3)',AFT:'rgba(129,199,132,.3)',SWI:'rgba(206,147,216,.3)',MID:'rgba(239,154,154,.3)',OFF:'rgba(125,133,144,.1)'};
+  const now = new Date();
+  const isToday = key === dateKey(now);
+  const nowPct  = timeToPercent(now.getHours(), now.getMinutes());
+  const labels  = ['00','03','06','09','12','15','18','21','24'];
+  let bars = '';
+
+  if (shifts.length===1 && shifts[0]==='OFF') {
+    bars = '<div class="timeline-bar" style="left:2%;width:96%;background:'+BG.OFF+';opacity:.3;"><span style="color:var(--muted);font-size:9px;">비번</span></div>';
+  } else {
+    shifts.filter(s=>s!=='OFF').forEach(s => {
+      const si = SHIFT_INFO[s]; if (!si || si.startH===si.endH) return;
+      const leftPct  = (si.startH*60+si.startM)/1440*100;
+      const widthPct = ((si.endH*60+si.endM)-(si.startH*60+si.startM))/1440*100;
+      const lbl = s==='MID'?'◀ MID':s==='SWI'?'SWI ▶':s;
+      bars += '<div class="timeline-bar" style="left:'+leftPct+'%;width:'+widthPct+'%;background:'+BG[s]+';border:1px solid '+(SHIFT_COLORS[s]||'#fff')+'50;">'
+        +'<span style="color:'+(SHIFT_COLORS[s]||'#fff')+';font-size:9px;font-weight:700;">'+lbl+'</span></div>';
+    });
+  }
+
+  const nowLine = isToday ? '<div class="timeline-now-line" style="left:'+nowPct+'%"></div>' : '';
+  const labelHtml = '<div class="timeline-label">'+labels.map(l=>'<span>'+l+'</span>').join('')+'</div>';
+  const bgLines = '<div class="timeline-bg-lines">'+Array(8).fill('<div class="timeline-hour"></div>').join('')+'</div>';
+
+  return '<div class="timeline-wrap">'+bgLines+bars+nowLine+labelHtml+'</div>';
+}
+
+// ============================================================
+// 메모 전체보기
+// ============================================================
+function renderMemoList() {
+  updateUserBanner();
+  const container = document.getElementById('memo-list-container');
+  const subEl     = document.getElementById('memo-list-sub');
+  container.innerHTML = '';
+
+  // 모든 메모 수집 + 날짜 정렬
+  const entries = Object.entries(memoData)
+    .filter(([, v]) => v.memo || v.flag)
+    .sort(([a], [b]) => a < b ? 1 : -1); // 최신순
+
+  if (entries.length === 0) {
+    subEl.textContent = '메모가 없어요';
+    container.innerHTML =
+      '<div class="memo-empty">'
+      + '<div class="memo-empty-icon">📝</div>'
+      + '<div class="memo-empty-txt">아직 메모가 없어요.<br>캘린더에서 날짜를 탭하면<br>메모를 입력할 수 있어요!</div>'
+      + '</div>';
+    return;
+  }
+
+  subEl.textContent = '총 '+entries.length+'개의 메모';
+
+  // 월별로 그룹핑
+  const groups = {};
+  entries.forEach(([key, val]) => {
+    const mk = key.slice(0, 7); // YYYY-MM
+    if (!groups[mk]) groups[mk] = [];
+    groups[mk].push([key, val]);
+  });
+
+  Object.keys(groups).sort((a,b) => a < b ? 1 : -1).forEach(mk => {
+    // 월 레이블
+    const [y, m] = mk.split('-');
+    const lbl = document.createElement('div');
+    lbl.className = 'memo-month-label';
+    lbl.textContent = y+'년 '+parseInt(m)+'월';
+    container.appendChild(lbl);
+
+    groups[mk].forEach(([key, val]) => {
+      const dt  = parseKey(key);
+      const dow = dt.getDay();
+      const holiday = HOLIDAYS[key];
+      const shifts  = getShifts(key);
+      const mainSh  = shifts.length > 0 ? shifts[0] : null;
+      const partner = partnerOverrides[key];
+
+      // 날짜 색
+      let dayColor = '';
+      if (dow===0 || holiday) dayColor = 'color:#ff6b6b;';
+      else if (dow===6) dayColor = 'color:var(--mil);';
+
+      // 근무 배지
+      let shiftBadge = '';
+      if (mainSh && mainSh !== 'OFF') {
+        const si = SHIFT_INFO[mainSh];
+        const sc = ({MOR:'rgba(255,213,79,.2)',AFT:'rgba(129,199,132,.2)',SWI:'rgba(206,147,216,.2)',MID:'rgba(239,154,154,.2)'})[mainSh]||'';
+        const tc = ({MOR:'var(--mor)',AFT:'var(--aft)',SWI:'var(--swi)',MID:'var(--mid)'})[mainSh]||'var(--muted)';
+        const lbl2 = mainSh==='MID'?'MID◀':mainSh==='SWI'?'SWI▶':mainSh;
+        shiftBadge = '<span class="memo-item-shift" style="background:'+sc+';color:'+tc+';">'+lbl2+'</span>';
+      } else if (mainSh === 'OFF') {
+        shiftBadge = '<span class="memo-item-shift" style="background:rgba(125,133,144,.15);color:var(--muted);">비번</span>';
+      }
+
+      const item = document.createElement('div');
+      item.className = 'memo-item fade-in';
+      item.onclick = () => {
+        // 해당 날짜 달로 이동 후 모달 열기
+        currentYear  = dt.getFullYear();
+        currentMonth = dt.getMonth();
+        switchView('month');
+        setTimeout(() => openModal(key, dt.getDate(), dow), 200);
+      };
+
+      let bodyHtml = '';
+      if (val.flag || val.memo) {
+        if (val.flag) bodyHtml += '<span class="memo-item-flag">'+val.flag+'</span>';
+        if (val.memo) bodyHtml += '<span class="memo-item-text">'+escHtml(val.memo)+'</span>';
+      }
+
+      // 조원 변경 있으면 표시
+      let partnerHtml = '';
+      if (partner && partner.rank && partner.name) {
+        partnerHtml = '<div style="font-size:11px;color:var(--swi);margin-top:5px;">👥 '+escHtml(partner.rank)+' '+escHtml(partner.name)+'</div>';
+      }
+
+      item.innerHTML =
+        '<div class="memo-item-date">'
+        + '<div>'
+        + '<div class="memo-item-day" style="'+dayColor+'">'
+          + parseInt(m)+'월 '+dt.getDate()+'일'
+          + '<span class="memo-item-dow"> ('+DAYS_KO[dow]+')'+(holiday?' · '+holiday:'')+'</span>'
+        + '</div>'
+        + '</div>'
+        + shiftBadge
+        + '</div>'
+        + '<div class="memo-item-body">'+bodyHtml+'</div>'
+        + partnerHtml;
+
+      container.appendChild(item);
+    });
+  });
+}
+
+function changeWeek(dir) {
+  currentWeekStart = new Date(currentWeekStart);
+  currentWeekStart.setDate(currentWeekStart.getDate() + dir*7);
+  renderWeek();
+}
+function goToday() {
+  const t = new Date(); const dow = t.getDay();
+  currentWeekStart = new Date(t);
+  currentWeekStart.setDate(t.getDate()-dow);
+  renderWeek();
+}
+
+// ============================================================
+// 누적 통계
+// ============================================================
+function toggleCumMode() {
+  cumMode = !cumMode;
+  document.getElementById('cum-toggle-btn').textContent = cumMode ? '📅 이달만 보기' : '📊 전체 누적 보기';
+  document.getElementById('cum-title').textContent = cumMode ? '⏱️ 전체 누적 근무 통계' : '⏱️ 이달 누적 근무 통계';
+  updateCumStats();
+}
+
+function updateCumStats() {
+  let workMins=0, offMins=0;
+  const now = new Date(); now.setHours(23,59,59,999);
+  const allKeys = new Set(Object.keys(shiftOverrides));
+  Object.entries(monthFirstDates).forEach(([mk, fd]) => {
+    const p = mk.split('-'); const y=+p[0], m=+p[1]-1;
+    const days = new Date(y, m+1, 0).getDate();
+    for (let d=1; d<=days; d++) allKeys.add(dateKey(new Date(y,m,d)));
+  });
+  allKeys.forEach(key => {
+    const d = parseKey(key);
+    if (d > now) return;
+    if (!cumMode && (d.getFullYear()!==currentYear || d.getMonth()!==currentMonth)) return;
+    const shs = getShifts(key); if (shs.length===0) return;
+    if (shs[0]==='OFF') {
+      offMins += 1440;
+    } else {
+      shs.filter(s => s !== 'OFF').forEach(s => {
+        // MID는 1일차(MOR+MID)에만 집계 — 2일차(MID+SWI)의 MID는 전날 근무의 연장이므로 제외
+        if (s === 'MID' && !shs.includes('MOR')) return;
+        workMins += (SHIFT_INFO[s]||{mins:0}).mins;
+      });
+    }
+  });
+
+  document.getElementById('cum-work-time').textContent = fmtHM(workMins);
+  document.getElementById('cum-work-days').textContent = fmtFull(workMins);
+  document.getElementById('cum-off-time').textContent  = fmtHM(offMins);
+  document.getElementById('cum-off-days').textContent  = fmtFull(offMins);
+  const total = workMins+offMins;
+  const pct = total>0 ? Math.round(workMins/total*100) : 0;
+  document.getElementById('cum-ratio-txt').textContent = '근무 '+pct+'% : OFF '+(100-pct)+'%';
+  document.getElementById('cum-progress-fill').style.width = pct+'%';
+  updateCompare(workMins, cumMode);
+}
+
+// 주간 근무자 실제 근무시간 계산 (월~금, 공휴일 제외, 일 10시간)
+function calcWeekdayHours(startDate, endDate) {
+  let workDays = 0;
+  const cur = new Date(startDate);
+  cur.setHours(0,0,0,0);
+  const end = new Date(endDate);
+  end.setHours(0,0,0,0);
+  while (cur <= end) {
+    const dow = cur.getDay();
+    const key = dateKey(cur);
+    if (dow >= 1 && dow <= 5 && !HOLIDAYS[key]) workDays++;
+    cur.setDate(cur.getDate()+1);
+  }
+  return Math.round(workDays * 10 * 10) / 10; // 일 10시간(주 50h÷5일)
+}
+
+function updateCompare(workMins, allMode) {
+  const el = document.getElementById('cum-compare-body');
+  if (workMins===0) { el.innerHTML='<span style="color:var(--muted);">근무 데이터를 등록하면 비교가 표시돼요 😊</span>'; return; }
+
+  const titleEl = document.getElementById('cum-compare-title');
+  if (titleEl) titleEl.textContent = '🏢 주간 근무자와 비교 (주 50시간 기준)';
+
+  let myFullMins, stdH, label;
+
+  if (!allMode) {
+    // ── 이달 모드: 내 근무는 달 전체, 주간 근무자도 달 전체 ──
+    const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+    myFullMins = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = dateKey(new Date(currentYear, currentMonth, d));
+      const shs = getShifts(key);
+      if (!shs.length || shs[0]==='OFF') continue;
+      shs.filter(s=>s!=='OFF').forEach(s => {
+        if (s === 'MID' && !shs.includes('MOR')) return;
+        myFullMins += (SHIFT_INFO[s]||{mins:0}).mins;
+      });
+    }
+    if (myFullMins === 0) {
+      el.innerHTML='<span style="color:var(--muted);">이달 스케줄을 등록하면 비교가 표시돼요 😊</span>';
+      return;
+    }
+    // 주간 근무자: 이달 1일~말일 중 실제 평일(공휴일 제외) × 10시간
+    const monthStart = new Date(currentYear, currentMonth, 1);
+    const monthEnd   = new Date(currentYear, currentMonth+1, 0);
+    stdH = calcWeekdayHours(monthStart, monthEnd);
+    label = '이달';
+
+  } else {
+    // ── 전체 모드: 내 근무는 오늘까지 누적, 주간 근무자도 같은 기간 ──
+    myFullMins = workMins;
+    const keys = Object.keys(monthFirstDates).sort();
+    if (!keys.length) { el.textContent='—'; return; }
+    const fp = keys[0].split('-');
+    const periodStart = new Date(+fp[0], +fp[1]-1, 1);
+    const periodEnd   = new Date();
+    stdH = calcWeekdayHours(periodStart, periodEnd);
+    label = '전체';
+  }
+
+  const myH  = Math.round(myFullMins/60*10)/10;
+  const diff = Math.round((myH - stdH)*10)/10;
+  const abs  = Math.abs(diff);
+  const diffH = Math.floor(abs), diffM = Math.round((abs-diffH)*60);
+
+  let emoji, cls, txt;
+  if (diff>0)      { emoji='😤'; cls='more'; txt=diffH+'시간 '+diffM+'분 더 일함'; }
+  else if (diff<0) { emoji='😎'; cls='less'; txt=diffH+'시간 '+diffM+'분 덜 일함'; }
+  else             { emoji='🤝'; cls='';     txt='딱 같음!'; }
+
+  const moreMsg = ['야근의 달인이시네요 💪','철야의 전설... 😵','주 52시간제가 부럽겠군요 😅','특수근무의 무게가 느껴집니다 🎖️'];
+  const lessMsg = ['워라밸 승리자! 🎉','부러운 스케줄이네요 ✨','비번의 소중함을 아는 분 😊','여유 넘치는 특수근무자 😄'];
+  const comment = diff>0 ? moreMsg[Math.floor(myH/10)%4] : diff<0 ? lessMsg[Math.floor(stdH/10)%4] : '완벽한 균형! 🤝';
+
+  const myLabel = allMode ? label+' 근무(현재까지)' : label+' 풀 근무';
+  el.innerHTML =
+    '📌 '+myLabel+': <strong>'+myH+'시간</strong><br>'
+    +'📌 주간 근무자 '+label+': <strong>'+stdH+'시간</strong><br>'
+    +'<span class="'+cls+'">'+emoji+' '+txt+'</span><br>'
+    +'<span style="font-size:11px;color:var(--muted);">'+comment+'</span>';
+}
+
+// ============================================================
+// 모달
+// ============================================================
+function openModal(key, d, dow) {
+  selectedDate = key;
+  const month   = parseInt(key.split('-')[1]);
+  const holiday = HOLIDAYS[key];
+  document.getElementById('modal-title').textContent = month+'월 '+d+'일 ('+DAYS_KO[dow]+')'+(holiday?' · '+holiday:'');
+
+  const curShifts = getShifts(key);
+  const isManual = !!shiftOverrides[key];
+  const activeShifts = isManual
+    ? (Array.isArray(shiftOverrides[key]) ? shiftOverrides[key] : [shiftOverrides[key]])
+    : curShifts;
+  const mainShift = activeShifts[0] || 'OFF';
+  const si = SHIFT_INFO[mainShift] || SHIFT_INFO.OFF;
+  const hdr = document.getElementById('modal-shift-hdr');
+  hdr.className = 'modal-shift-hdr '+mainShift;
+
+  if (activeShifts.length > 1) {
+    hdr.innerHTML = activeShifts.map(s=>{
+      const info=SHIFT_INFO[s], lbl=s==='MID'?'MID ◀':s==='SWI'?'SWI ▶':(info?info.label:s);
+      return '<span style="color:'+(SHIFT_COLORS[s]||'var(--muted)')+';">'+lbl+(info?' '+info.time:'')+'</span>';
+    }).join(' + ')+(isManual?'':' <div class="modal-time" style="margin-top:4px;">※ 패턴 근무</div>');
+  } else {
+    hdr.innerHTML = si.label+' 근무<div class="modal-time">⏰ '+si.time+'</div>';
+  }
+
+  // 현재 선택된 근무 상태 초기화
+  window._modalShiftMode = 'replace';
+  window._modalSelectedShifts = isManual ? [...activeShifts] : [];
+  window._modalShiftChanged = false; // 변경 여부 플래그
+  setShiftMode('replace');
+  renderShiftBtns(window._modalSelectedShifts);
+
+  const memo = memoData[key] || {};
+  document.getElementById('memo-input').value = memo.memo || '';
+  document.querySelectorAll('.flag-btn').forEach(b => b.classList.toggle('sel', b.dataset.flag===(memo.flag||'')));
+
+  const dp = partnerOverrides[key] || {};
+  document.getElementById('modal-partner-rank').value = dp.rank || '';
+  document.getElementById('modal-partner-name').value = dp.name || '';
+
+  document.getElementById('modal-bg').classList.add('open');
+  renderSleepCard(key, curShifts);
+}
+
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); selectedDate=null; }
+
+function setShiftMode(mode) {
+  window._modalShiftMode = mode;
+  document.getElementById('mode-replace').classList.toggle('active', mode==='replace');
+  document.getElementById('mode-add').classList.toggle('active', mode==='add');
+  // OFF는 추가 모드에서 숨기기
+  document.querySelectorAll('.shift-btn').forEach(btn => {
+    if (btn.dataset.shift === 'OFF') {
+      btn.style.display = mode==='add' ? 'none' : '';
+    }
+  });
+}
+
+function renderShiftBtns(selectedShifts) {
+  const btns = document.getElementById('shift-btns');
+  btns.innerHTML = ['MOR','MID','SWI','AFT','OFF'].map(s => {
+    const isSel = selectedShifts.includes(s);
+    return '<button class="shift-btn '+s+(isSel?' sel':'')+'" data-shift="'+s+'" onclick="selectShiftBtn(this)">'
+      +s+'<br><span style="font-size:8px;font-weight:400;opacity:.7;">'+SHIFT_INFO[s].time+'</span></button>';
+  }).join('');
+  updateShiftPreview(selectedShifts);
+  // 모드에 따라 OFF 버튼 표시
+  if (window._modalShiftMode === 'add') {
+    const offBtn = btns.querySelector('[data-shift="OFF"]');
+    if (offBtn) offBtn.style.display = 'none';
+  }
+}
+
+function updateShiftPreview(shifts) {
+  const preview = document.getElementById('shift-preview');
+  if (!shifts || shifts.length === 0) {
+    preview.innerHTML = '<span style="color:var(--muted);font-size:11px;">아래에서 근무를 선택하세요</span>';
+    return;
+  }
+  const COLORS = {MOR:'var(--mor)',AFT:'var(--aft)',SWI:'var(--swi)',MID:'var(--mid)',OFF:'var(--muted)'};
+  const BG = {MOR:'rgba(255,213,79,.15)',AFT:'rgba(129,199,132,.15)',SWI:'rgba(206,147,216,.15)',MID:'rgba(239,154,154,.15)',OFF:'rgba(125,133,144,.15)'};
+  const labels = shifts.map(s => {
+    const lbl = s==='MID'?'MID◀':s==='SWI'?'SWI▶':s;
+    return '<span class="shift-preview-badge" style="background:'+BG[s]+';color:'+COLORS[s]+';">'+lbl+'</span>';
+  }).join('');
+  preview.innerHTML = '선택: '+labels;
+}
+
+function selectShiftBtn(btn) {
+  const sh = btn.dataset.shift;
+  const mode = window._modalShiftMode || 'replace';
+  let selected = window._modalSelectedShifts || [];
+
+  if (mode === 'replace') {
+    // 변경 모드: 하나만 선택 (OFF 포함)
+    selected = [sh];
+  } else {
+    // 추가 모드: 토글 (OFF 제외)
+    if (sh === 'OFF') return;
+    if (selected.includes(sh)) {
+      selected = selected.filter(s => s !== sh);
+    } else {
+      selected = [...selected, sh];
+    }
+    // 중복 제거 + 시간순 정렬
+    const ORDER = {MID:0, MOR:1, AFT:2, SWI:3};
+    selected = [...new Set(selected)].sort((a,b) => (ORDER[a]??9)-(ORDER[b]??9));
+  }
+
+  window._modalSelectedShifts = selected;
+  window._modalShiftChanged = true; // 사용자가 변경함
+  renderShiftBtns(selected);
+
+  // 헤더 업데이트
+  const hdr = document.getElementById('modal-shift-hdr');
+  if (selected.length === 0) {
+    hdr.className = 'modal-shift-hdr OFF';
+    hdr.innerHTML = '근무 없음';
+  } else if (selected.length === 1) {
+    const si = SHIFT_INFO[selected[0]] || SHIFT_INFO.OFF;
+    hdr.className = 'modal-shift-hdr '+selected[0];
+    hdr.innerHTML = si.label+' 근무<div class="modal-time">⏰ '+si.time+'</div>';
+  } else {
+    hdr.className = 'modal-shift-hdr '+selected[0];
+    hdr.innerHTML = selected.map(s => {
+      const info=SHIFT_INFO[s], lbl=s==='MID'?'MID ◀':s==='SWI'?'SWI ▶':(info?info.label:s);
+      return '<span style="color:'+(SHIFT_COLORS[s]||'var(--muted)')+';">'+lbl+(info?' '+info.time:'')+'</span>';
+    }).join(' + ');
+  }
+}
+
+function resetShiftToDefault() {
+  window._modalSelectedShifts = [];
+  window._modalShiftChanged = true; // 기본값 복원도 변경으로 처리
+  renderShiftBtns([]);
+  const hdr = document.getElementById('modal-shift-hdr');
+  const defaults = getShifts(selectedDate);
+  const mainShift = defaults[0] || 'OFF';
+  const si = SHIFT_INFO[mainShift] || SHIFT_INFO.OFF;
+  if (defaults.length > 1) {
+    hdr.className = 'modal-shift-hdr '+mainShift;
+    hdr.innerHTML = defaults.map(s=>{
+      const info=SHIFT_INFO[s], lbl=s==='MID'?'MID ◀':s==='SWI'?'SWI ▶':(info?info.label:s);
+      return '<span style="color:'+(SHIFT_COLORS[s]||'var(--muted)')+';">'+lbl+(info?' '+info.time:'')+'</span>';
+    }).join(' + ')+'<div class="modal-time" style="margin-top:4px;">↩ 패턴 기본값으로 복원됩니다</div>';
+  } else {
+    hdr.className = 'modal-shift-hdr '+mainShift;
+    hdr.innerHTML = si.label+' 근무<div class="modal-time">↩ 패턴 기본값으로 복원됩니다</div>';
+  }
+}
+
+function toggleFlag(btn) {
+  const was = btn.classList.contains('sel');
+  document.querySelectorAll('.flag-btn').forEach(b=>b.classList.remove('sel'));
+  if (!was) btn.classList.add('sel');
+}
+
+function resetDayPartner() {
+  document.getElementById('modal-partner-rank').value = '';
+  document.getElementById('modal-partner-name').value = '';
+}
+
+function saveMemo() {
+  if (!selectedDate) return;
+  const memo  = document.getElementById('memo-input').value.trim();
+  const activeFlag = document.querySelector('.flag-btn.sel');
+  const flag  = activeFlag ? activeFlag.dataset.flag : '';
+
+  // 근무 저장 (사용자가 명시적으로 변경했을 때만)
+  if (window._modalShiftChanged) {
+    const selectedShifts = window._modalSelectedShifts || [];
+    if (selectedShifts.length > 0) {
+      const defaults = getShifts(selectedDate);
+      // 순서 무관하게 같은 근무 집합인지 비교
+      const isSameAsDefault = selectedShifts.length === defaults.length
+        && selectedShifts.every(s => defaults.includes(s))
+        && defaults.every(s => selectedShifts.includes(s));
+      if (isSameAsDefault) delete shiftOverrides[selectedDate];
+      else shiftOverrides[selectedDate] = selectedShifts;
+    } else {
+      // 빈 배열 = 기본 패턴으로 복원
+      delete shiftOverrides[selectedDate];
+    }
+    localStorage.setItem('bbangpo_overrides', JSON.stringify(shiftOverrides));
+  }
+
+  // 메모 저장
+  if (memo || flag) memoData[selectedDate] = {memo, flag};
+  else delete memoData[selectedDate];
+  localStorage.setItem('bbangpo_memo', JSON.stringify(memoData));
+
+  // 조원 저장
+  const pRank = document.getElementById('modal-partner-rank').value;
+  const pName = document.getElementById('modal-partner-name').value.trim();
+  if (pRank && pName) partnerOverrides[selectedDate] = {rank:pRank, name:pName};
+  else delete partnerOverrides[selectedDate];
+  localStorage.setItem('bbangpo_partner_overrides', JSON.stringify(partnerOverrides));
+
+  closeModal();
+  if (currentView==='month') renderCalendar();
+  else if (currentView==='week') renderWeek();
+  else if (currentView==='memo') renderMemoList();
+  showToast('저장 완료!');
+}
+
+// ============================================================
+// 수면 추천
+// ============================================================
+function renderSleepCard(key, shifts) {
+  const card = document.getElementById('sleep-card');
+  const cont = document.getElementById('sleep-content');
+  if (!shifts || shifts.length===0) { card.style.display='none'; return; }
+
+  const _pk = parseKey(key); _pk.setDate(_pk.getDate()-1);
+  const prevKey = dateKey(_pk);
+  const prevShifts = getShifts(prevKey);
+
+  const hasMOR = shifts.includes('MOR'), hasMID = shifts.includes('MID');
+  const hasSWI = shifts.includes('SWI'), hasAFT = shifts.includes('AFT');
+  const isOFF  = shifts[0]==='OFF' && shifts.length===1;
+
+  let qualityHtml='', rows=[];
+
+  if (hasMOR && hasMID) {
+    qualityHtml = '<span class="sleep-quality sq-hard">⚡ 고강도 — 낮잠 필수</span>';
+    rows = [
+      {icon:'🌙', lbl:'취침 권장', val:'전날 밤 21:30~22:30', tip:'MOR 출근 전 7~8시간 확보. 늦어도 22:30 취침.', deadline:'23:00', deadlineTip:'이 시간 넘기면 6시간 미만 — 낮잠 필수'},
+      {icon:'⏰', lbl:'기상 시간', val:'06:30~07:00', tip:'출근 30~60분 전 기상.'},
+      {icon:'😴', lbl:'오후 낮잠 (필수)', val:'13:00~17:00 사이 90~120분', tip:'자정 MID 출근 전 필수. NASA 연구: 26분 낮잠 = 수행능력 34% 향상.', deadline:'17:00', deadlineTip:'이 시간 이후 낮잠은 자정 출근 수면에 방해'},
+      {warn:'⚠️ MOR+MID 이중근무입니다. 낮잠 없이는 자정 이후 집중력·반응속도가 급격히 저하됩니다. 카페인은 18:00 이후 삼가세요.'},
+    ];
+  } else if (hasMID && hasSWI) {
+    qualityHtml = '<span class="sleep-quality sq-fair">🔶 주의 — 낮 수면 필요</span>';
+    rows = [
+      {icon:'🌅', lbl:'퇴근 후 취침', val:'08:00~09:00 (MID 퇴근 직후)', tip:'퇴근 즉시 취침. 커튼 차단·안대 착용 권장.', deadline:'10:00', deadlineTip:'이 시간 넘기면 SWI 전 충분한 수면 확보 불가'},
+      {icon:'⏰', lbl:'기상 시간', val:'14:00~15:30', tip:'6~7시간 낮 수면. SWI 출근 2시간 전 기상.', deadline:'15:30', deadlineTip:'이 시간 넘기면 준비시간 부족 — 즉시 기상'},
+      {icon:'☀️', lbl:'SWI 출근 전', val:'기상 후 햇빛 노출 15분', tip:'일주기리듬 조정. 17:30 출근.'},
+      {warn:'⚠️ 낮 수면은 야간 수면의 70~80% 효율입니다. (Torsvall & Åkerstedt) 소음·빛 차단이 핵심.'},
+    ];
+  } else if (hasMOR && !hasMID) {
+    // 수동변경으로 MOR만 있는 날
+    qualityHtml = '<span class="sleep-quality sq-good">✅ MOR — 정상 수면 가능</span>';
+    rows = [
+      {icon:'🌙', lbl:'취침 권장', val:'전날 밤 21:30~22:30', tip:'MOR 출근 전 7~8시간 확보.', deadline:'23:00', deadlineTip:'이 시간 넘기면 6시간 미만 수면'},
+      {icon:'⏰', lbl:'기상 시간', val:'06:30~07:00', tip:'출근 30~60분 전 기상.'},
+    ];
+  } else if (hasAFT) {
+    qualityHtml = '<span class="sleep-quality sq-good">✅ 양호 — 정상 수면 가능</span>';
+    rows = [
+      {icon:'🌙', lbl:'취침 권장', val:'00:00~01:00', tip:'AFT는 비교적 정상 일정.', deadline:'02:00', deadlineTip:'이 시간 넘기면 6시간 미만 — 오전 컨디션 저하'},
+      {icon:'⏰', lbl:'기상 시간', val:'08:00~10:00', tip:'7~9시간 수면 후 기상. 출근 2시간 전 식사.', deadline:'10:00', deadlineTip:'이 시간 넘기면 준비시간 2시간 미만'},
+      {icon:'✅', lbl:'수면 품질', val:'가장 정상에 가까운 날', tip:'야간 수면 가능. 일주기리듬 회복에 유리.'},
+    ];
+  } else if (isOFF) {
+    const prevHasNight = prevShifts.includes('SWI') || prevShifts.includes('MID');
+    qualityHtml = '<span class="sleep-quality sq-good">💚 회복일</span>';
+    if (prevHasNight) {
+      rows = [
+        {icon:'🌙', lbl:'취침 권장', val:'전날 근무 후 최대한 빨리', tip:'야근 후 첫 OFF. 주간 수면 8~10시간 확보.'},
+        {icon:'⏰', lbl:'기상 목표', val:'점진적 정상화 (매일 1~2시간씩)', tip:'CDC 권고: 급격한 수면 시간 변경은 역효과.'},
+        {icon:'🔄', lbl:'일주기리듬 회복', val:'오전 햇빛 노출 15~30분', tip:'기상 후 야외 활동으로 멜라토닌 억제.'},
+      ];
+    } else {
+      rows = [
+        {icon:'😴', lbl:'권장 수면', val:'22:00~23:00 취침 · 07:00 기상', tip:'정상 수면 패턴으로 회복.'},
+        {icon:'🔋', lbl:'회복 팁', val:'7~9시간 수면 + 낮 활동', tip:'과도한 낮잠(90분 이상)은 야간 수면을 방해. (AASM)'},
+      ];
+    }
+  }
+
+  if (!rows.length) { card.style.display='none'; return; }
+
+  let html = qualityHtml ? '<div style="margin-bottom:10px;">'+qualityHtml+'</div>' : '';
+  rows.forEach(r => {
+    if (r.warn) {
+      html += '<div class="sleep-warn">'+r.warn+'</div>';
+    } else {
+      const deadlineHtml = r.deadline
+        ? '<div class="sleep-deadline"><div class="sleep-deadline-icon">🚨</div><div class="sleep-deadline-body"><div class="sleep-deadline-label">마지노선</div><div class="sleep-deadline-val">'+r.deadline+'</div><div class="sleep-deadline-tip">'+r.deadlineTip+'</div></div></div>'
+        : '';
+      html += '<div class="sleep-row"><div class="sleep-icon">'+r.icon+'</div><div style="flex:1;">'
+        +'<div class="sleep-lbl">'+r.lbl+'</div>'
+        +'<div class="sleep-val">'+r.val+'</div>'
+        +(r.tip?'<div class="sleep-tip">'+r.tip+'</div>':'')
+        +deadlineHtml
+        +'</div></div>';
+    }
+  });
+
+  cont.innerHTML = html;
+  card.style.display = 'block';
+}
+
+// ============================================================
+// 설정 이동 / 초기화
+// ============================================================
+function goSetup() {
+  showPage('setup');
+  document.getElementById('view-tabs').style.display = 'none';
+  initRegionSelects();
+  document.getElementById('rank').value         = userInfo.rank || '';
+  document.getElementById('username').value     = userInfo.name || '';
+  document.getElementById('partner-rank').value = userInfo.partnerRank || '';
+  document.getElementById('partner-name').value = userInfo.partnerName || '';
+  if (!setupMonth) setupMonth = monthKey(new Date().getFullYear(), new Date().getMonth());
+  renderMonthTabs();
+  const fd = monthFirstDates[setupMonth];
+  if (fd) { document.getElementById('first-date').value=fd; renderPreviewFromDate(fd); }
+  else    { document.getElementById('first-date').value=''; document.getElementById('preview-card').style.display='none'; }
+  checkStartBtn();
+}
+
+function confirmReset() {
+  document.getElementById('reset-modal-bg').classList.add('open');
+}
+
+function closeResetModal() {
+  document.getElementById('reset-modal-bg').classList.remove('open');
+}
+
+function doReset() {
+  closeResetModal();
+
+  // localStorage 전체 삭제
+  ['bbangpo_user','bbangpo_months','bbangpo_overrides','bbangpo_memo','bbangpo_partner_overrides']
+    .forEach(k => localStorage.removeItem(k));
+
+  // 상태 초기화
+  userInfo = {rank:'',name:'',partnerRank:'',partnerName:''};
+  monthFirstDates = {}; shiftOverrides = {}; memoData = {}; partnerOverrides = {};
+  cumMode = false; currentView = 'month';
+  const wtab = document.getElementById('tab-weather'); if(wtab) wtab.classList.remove('active');
+
+  // 카운터 타이머 정리
+  if (morCounterTimer) { clearInterval(morCounterTimer); morCounterTimer = null; }
+
+  // 입력값 초기화
+  ['rank','username','partner-rank','partner-name','first-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  // UI 초기화
+  document.getElementById('preview-card').style.display = 'none';
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('user-badge').textContent = '⚙️ 설정';
+  document.getElementById('reset-badge').style.display = 'none';
+  document.getElementById('view-tabs').style.display = 'none';
+
+  // 카운터 카드 숨기기
+  const nmCard = document.getElementById('next-mor-card');
+  if (nmCard) nmCard.style.cssText = 'display:none;margin:0;padding:0;border:none;height:0;overflow:hidden;';
+  const mottoCard = document.getElementById('motto-card');
+  if (mottoCard) mottoCard.style.display = 'none';
+  const funCard = document.getElementById('fun-card');
+  if (funCard) funCard.style.display = 'none';
+  const quoteCard = document.getElementById('quote-card');
+  if (quoteCard) quoteCard.style.display = 'none';
+  const weatherBadge = document.getElementById('weather-badge');
+  if (weatherBadge) weatherBadge.style.display = 'none';
+  weatherRegion = null; weatherCache = {};
+  localStorage.removeItem('bbangpo_region');
+
+  setupMonth = monthKey(new Date().getFullYear(), new Date().getMonth());
+  renderMonthTabs();
+  showPage('setup');
+  showToast('초기화 완료! ✅');
+}
+
+// ============================================================
+// 도움말
+// ============================================================
+function openHelp()       { document.getElementById('help-bg').classList.add('open'); }
+function closeHelpDirect(){ document.getElementById('help-bg').classList.remove('open'); }
+function switchHelp(id, btn) {
+  const modal = document.getElementById('help-bg');
+  modal.querySelectorAll('.help-tab').forEach(b=>b.classList.remove('active'));
+  modal.querySelectorAll('.help-section').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('help-'+id).classList.add('active');
+}
+</script>
+</body>
+</html>
